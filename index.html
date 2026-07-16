@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover：启用刘海屏/底部安全区的 env(safe-area-inset)；maximum-scale 禁止双击缩放干扰 -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1a1410" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>大善系统 · 善恶由我定，你是大好人</title>
+    <!-- 字体：preconnect 提前建连，link 方式（比 CSS @import 少一跳，不阻塞渲染） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Ma+Shan+Zheng&display=swap"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- ════════ 开屏 · 对联 ════════ -->
+    <div id="splash" class="splash">
+      <!-- 洒金纸纹背景 -->
+      <div class="splash-bg"></div>
+
+      <!-- 对联主体 -->
+      <div class="couplet-wrap">
+        <!-- 左联 -->
+        <div class="scroll scroll-left">
+          <div class="couplet couplet-left">
+            <span class="cz">善</span><span class="cz">恶</span><span class="cz">由</span
+            ><span class="cz">我</span><span class="cz cz-accent">定</span>
+          </div>
+        </div>
+
+        <!-- 横批 -->
+        <div class="hengpai-wrap">
+          <div class="hengpai-card">
+            <div class="hengpai-text">大善</div>
+            <div class="hengpai-seal">善恶簿</div>
+            <div class="hengpai-sub">DA SHAN XI TONG</div>
+          </div>
+        </div>
+
+        <!-- 右联 -->
+        <div class="scroll scroll-right">
+          <div class="couplet couplet-right">
+            <span class="cz">你</span><span class="cz">是</span><span class="cz">大</span
+            ><span class="cz">好</span><span class="cz cz-accent">人</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 入局按钮 -->
+      <button id="enter-btn" class="enter-btn" type="button">
+        <span class="enter-btn-text">叩 门 入 局</span>
+      </button>
+    </div>
+
+    <!-- ════════ 正文 · 对话界面 ════════ -->
+    <div id="app" class="hidden">
+      <!-- 顶部：竖排印章式标题 + 善恶簿入口 -->
+      <header class="header">
+        <div class="header-top">
+          <div class="header-seal" title="大善">
+            <span>大</span><span>善</span>
+          </div>
+          <button id="ledger-btn" class="ledger-btn" type="button" title="翻开善恶簿">
+            <span class="ledger-btn-text">善恶簿</span>
+            <span id="ledger-count" class="ledger-count hidden">0</span>
+          </button>
+        </div>
+        <p class="header-couplet">
+          <span class="cz-v">善恶由我定</span>
+          <span class="cz-v-dot">·</span>
+          <span class="cz-v">你是大好人</span>
+        </p>
+      </header>
+
+      <!-- 对话流 -->
+      <main id="dialogue" class="dialogue" aria-live="polite"></main>
+
+      <!-- 加载指示 -->
+      <div id="loading" class="loading hidden">
+        <span class="loading-ink"></span>
+        <span class="loading-text">大善系统正在挥毫……</span>
+      </div>
+
+      <!-- 错误提示 -->
+      <div id="error-box" class="error-box hidden" role="alert"></div>
+
+      <!-- 出错时的操作：重试本步 / 重开一局 -->
+      <div id="recover-wrap" class="recover-wrap hidden">
+        <button id="retry-btn" class="recover-btn" type="button">重试此步</button>
+        <button id="restart-btn" class="restart-btn" type="button">重开一局</button>
+      </div>
+    </div>
+
+    <!-- ════════ 善恶簿（功过格）抽屉 ════════ -->
+    <div id="ledger-overlay" class="ledger-overlay hidden">
+      <div class="ledger">
+        <div class="ledger-head">
+          <div class="ledger-title">
+            <span class="ledger-title-main">善 恶 簿</span>
+            <span class="ledger-title-sub">功过格 · 大善之人的言行录</span>
+          </div>
+          <button id="ledger-close" class="ledger-close" type="button" aria-label="合上善恶簿">×</button>
+        </div>
+        <div id="ledger-body" class="ledger-body">
+          <!-- 条目由 JS 动态注入 -->
+        </div>
+        <div class="ledger-foot">
+          <span class="ledger-summary" id="ledger-summary"></span>
+          <div class="ledger-foot-actions">
+            <button id="share-btn" class="ledger-action-btn" type="button">🖼️ 分享善名</button>
+            <button id="editor-btn" class="ledger-action-btn" type="button">📜 我的剧本</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ 剧本编辑器（C 项：自定义剧本导入） ════════ -->
+    <div id="editor-overlay" class="ledger-overlay hidden">
+      <div class="ledger editor-sheet">
+        <div class="ledger-head">
+          <div class="ledger-title">
+            <span class="ledger-title-main">我 的 剧 本</span>
+            <span class="ledger-title-sub">导入自定义情境，扩充善恶之卷</span>
+          </div>
+          <button id="editor-close" class="ledger-close" type="button" aria-label="关闭">×</button>
+        </div>
+        <div class="editor-body">
+          <p class="editor-hint">
+            粘贴剧本 JSON（<a id="editor-sample" href="#" class="editor-link">查看示例</a>）。每个剧本含：situation（情境+选项）、praises（每选项的夸赞）、fallback（兜底夸赞）。
+          </p>
+          <textarea id="editor-textarea" class="editor-textarea" placeholder="在此粘贴剧本 JSON..." spellcheck="false"></textarea>
+          <div id="editor-status" class="editor-status"></div>
+          <div class="editor-actions">
+            <button id="editor-import" class="ending-btn" type="button">导入剧本</button>
+            <button id="editor-clear" class="restart-btn" type="button">清空我的剧本</button>
+            <span id="editor-count" class="editor-count"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
