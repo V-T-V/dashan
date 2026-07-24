@@ -13,6 +13,41 @@ export type Tone =
   | '江湖' // 武侠/市井比喻
   | '温情'; // 暖心升华
 
+/** 困境题材分类（与 prompt 里的 8 个题材库对应）。 */
+export type Category =
+  | '职场'
+  | '医疗'
+  | '司法'
+  | '战争'
+  | '亲情'
+  | '金钱'
+  | '科技'
+  | '人性';
+
+/** 全部分类（展示顺序 + 收藏筛选用）。 */
+export const ALL_CATEGORIES: readonly Category[] = [
+  '职场',
+  '医疗',
+  '司法',
+  '战争',
+  '亲情',
+  '金钱',
+  '科技',
+  '人性',
+];
+
+/** 分类 → 展示用 emoji。 */
+export const CATEGORY_EMOJI: Record<Category, string> = {
+  职场: '💼',
+  医疗: '⚕️',
+  司法: '⚖️',
+  战争: '⚔️',
+  亲情: '👨‍👩‍👧',
+  金钱: '💰',
+  科技: '🤖',
+  人性: '🌑',
+};
+
 /** 一个情境下的一个选项。 */
 export interface Choice {
   /** 选项标识，如 "A" / "B"。 */
@@ -27,6 +62,8 @@ export interface Situation {
   situation: string;
   /** 2-4 个选项。 */
   choices: Choice[];
+  /** 困境题材分类（LLM 生成或离线剧本标注；可缺省）。 */
+  category?: Category;
 }
 
 /** 对用户本次选择的回应：一段夸赞 + 下一个情境。 */

@@ -72,6 +72,9 @@
             <span class="ledger-btn-text">善恶簿</span>
             <span id="ledger-count" class="ledger-count hidden">0</span>
           </button>
+          <button id="favorites-btn" class="ledger-btn" type="button" title="翻开收藏夹">
+            <span class="ledger-btn-text">☆ 收藏</span>
+          </button>
         </div>
         <p class="header-couplet">
           <span class="cz-v">善恶由我定</span>
@@ -97,6 +100,9 @@
         <button id="retry-btn" class="recover-btn" type="button">重试此步</button>
         <button id="restart-btn" class="restart-btn" type="button">重开一局</button>
       </div>
+
+      <!-- 收藏当前情境 -->
+      <button id="fav-current-btn" class="fav-current-btn" type="button" title="收藏当前困境">☆ 收藏本情境</button>
     </div>
 
     <!-- ════════ 善恶簿（功过格）抽屉 ════════ -->
@@ -118,6 +124,24 @@
             <button id="share-btn" class="ledger-action-btn" type="button">🖼️ 分享善名</button>
             <button id="editor-btn" class="ledger-action-btn" type="button">📜 我的剧本</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ 收藏夹抽屉 ════════ -->
+    <div id="favorites-overlay" class="ledger-overlay hidden">
+      <div class="ledger">
+        <div class="ledger-head">
+          <div class="ledger-title">
+            <span class="ledger-title-main">收 藏 夹</span>
+            <span class="ledger-title-sub">值得回味的困境集</span>
+          </div>
+          <button id="favorites-close" class="ledger-close" type="button" aria-label="合上收藏夹">×</button>
+        </div>
+        <div id="favorites-tabs" class="fav-tabs"></div>
+        <div id="favorites-body" class="ledger-body"></div>
+        <div class="ledger-foot">
+          <span class="ledger-summary" id="favorites-summary"></span>
         </div>
       </div>
     </div>

@@ -38,6 +38,13 @@ import {
   toggleLedger,
 } from './ledger.ts';
 import { isMaxTitle } from '../shared/ledgerCore.ts';
+import {
+  addFavorite,
+  closeFavorites,
+  isFavorited,
+  openFavorites,
+  renderFavorites,
+} from './favorites.ts';
 
 const loadingEl = () => document.getElementById('loading')!;
 const errorEl = () => document.getElementById('error-box')!;
@@ -157,9 +164,10 @@ async function startGame(): Promise<void> {
 /** 渲染首个情境并记录历史。 */
 function renderFirstSituation(res: Extract<ChatResponse, { type: 'situation' }>): void {
   pushAssistantToHistory(res);
-  currentSituation = { situation: res.situation, choices: res.choices };
+  currentSituation = { situation: res.situation, choices: res.choices, category: res.category };
   appendSystemMessage(currentSituation.situation);
   renderChoices(currentSituation.choices, handleChoice);
+  updateFavCurrentBtn();
   saveProgress(history, currentSituation); // 持久化进度（A 项）
 }
 
@@ -209,9 +217,14 @@ async function handleChoice(choice: Choice): Promise<void> {
     }
 
     // 渲染下一个情境
-    currentSituation = { situation: res.next.situation, choices: res.next.choices };
+    currentSituation = {
+      situation: res.next.situation,
+      choices: res.next.choices,
+      category: res.next.category,
+    };
     appendSystemMessage(currentSituation.situation);
     renderChoices(currentSituation.choices, handleChoice);
+    updateFavCurrentBtn();
     saveProgress(history, currentSituation); // 持久化进度（A 项）
   } catch (e) {
     showError(`参悟失败：${e instanceof Error ? e.message : String(e)}`);
@@ -311,7 +324,7 @@ async function startNextSituation(): Promise<void> {
     const res = await callApi('');
     if (res.type !== 'situation') throw new Error('返回类型异常');
     pushAssistantToHistory(res);
-    currentSituation = { situation: res.situation, choices: res.choices };
+    currentSituation = { situation: res.situation, choices: res.choices, category: res.category };
     appendSystemMessage(currentSituation.situation);
     renderChoices(currentSituation.choices, handleChoice);
   } catch (e) {
@@ -402,6 +415,32 @@ function enterFromSplash(): void {
   }, 500);
 }
 
+/** 收藏当前展示的情境。 */
+function favCurrentSituation(): void {
+  if (!currentSituation) return;
+  const added = addFavorite({
+    situation: currentSituation.situation,
+    category: currentSituation.category,
+  });
+  updateFavCurrentBtn(added ? '★ 已收藏' : undefined);
+}
+
+/** 刷新「收藏本情境」按钮文案（已收藏则显示已收藏）。 */
+function updateFavCurrentBtn(forceText?: string): void {
+  const btn = document.getElementById('fav-current-btn');
+  if (!btn) return;
+  if (forceText) {
+    btn.textContent = forceText;
+    window.setTimeout(() => {
+      if (currentSituation) btn.textContent = isFavorited(currentSituation.situation) ? '★ 已收藏' : '☆ 收藏本情境';
+    }, 1200);
+    return;
+  }
+  if (currentSituation) {
+    btn.textContent = isFavorited(currentSituation.situation) ? '★ 已收藏' : '☆ 收藏本情境';
+  }
+}
+
 function init(): void {
   history = [{ role: 'system', content: SYSTEM_PROMPT }];
   // 从 localStorage 恢复善恶簿（跨会话保留称号与记录）
@@ -422,6 +461,18 @@ function init(): void {
   // 剧本编辑器（C 项）：初始化 + 入口按钮
   initEditor();
   document.getElementById('editor-btn')!.addEventListener('click', openEditor);
+  // 收藏夹抽屉：入口 / 关闭 / 点遮罩关闭
+  document.getElementById('favorites-btn')!.addEventListener('click', () => {
+    renderFavorites();
+    openFavorites();
+  });
+  document.getElementById('favorites-close')!.addEventListener('click', closeFavorites);
+  document.getElementById('favorites-overlay')!.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeFavorites();
+  });
+  // 收藏当前情境
+  document.getElementById('fav-current-btn')!.addEventListener('click', favCurrentSituation);
+  updateFavCurrentBtn();
   // 首屏预取：对联展示期间就请求首个情境，消除进入后空窗。
   // 但若已有未完成存档（会走 resumeFromSave），则跳过预取，避免浪费一次 LLM 调用。
   if (!loadProgress()) {

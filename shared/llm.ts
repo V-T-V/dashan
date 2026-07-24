@@ -17,7 +17,7 @@
 import { env } from './env.ts';
 import { isRetryableStatus, withRetry } from './retry.ts';
 import { pickFallbackTurn, pickFallbackFirstSituation } from './fallback.ts';
-import type { ChatRequest, ChatResponse, Message, Tone } from './types.ts';
+import { type Category, ALL_CATEGORIES, type ChatRequest, type ChatResponse, type Message, type Tone } from './types.ts';
 
 /** LLM 客户端接口：输入对话历史 + 用户选择，输出一回合的结构化响应。 */
 export interface LLMClient {
@@ -65,8 +65,10 @@ export function normalizeResponse(data: unknown, lastChoice: string): ChatRespon
 
   // 首回合（situation）
   if (type === 'situation') {
+    const category = pickCategory(obj, 'category');
     return {
       type: 'situation',
+      ...(category ? { category } : {}),
       situation: pickString(obj, 'situation'),
       choices: pickChoices(obj),
     };
@@ -76,6 +78,7 @@ export function normalizeResponse(data: unknown, lastChoice: string): ChatRespon
   if (type === 'turn') {
     const rawTone = pickString(obj, 'tone');
     const tone: Tone = VALID_TONES.has(rawTone) ? (rawTone as Tone) : '庄严';
+    const category = pickCategory(obj, 'category');
     return {
       type: 'turn',
       praise: pickString(obj, 'praise'),
@@ -83,6 +86,7 @@ export function normalizeResponse(data: unknown, lastChoice: string): ChatRespon
       next: {
         situation: pickString(obj, 'nextSituation'),
         choices: pickChoices(obj),
+        ...(category ? { category } : {}),
       },
     };
   }
@@ -97,6 +101,14 @@ function pickString(obj: Record<string, unknown>, key: string): string {
     throw new Error(`LLM 返回缺少或空的字段：${key}`);
   }
   return v.trim();
+}
+
+/** 从对象中取分类字段；缺失或非法返回 undefined（不抛错，分类是可选的）。 */
+function pickCategory(obj: Record<string, unknown>, key: string): Category | undefined {
+  const v = obj[key];
+  if (typeof v !== 'string') return undefined;
+  const trimmed = v.trim();
+  return (ALL_CATEGORIES as readonly string[]).includes(trimmed) ? (trimmed as Category) : undefined;
 }
 
 /** 从对象中安全取 choices 数组并校验长度与结构。 */
