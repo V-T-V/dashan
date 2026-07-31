@@ -62,7 +62,9 @@ test('userScripts: 写入后 loadSave 能读回（migrate 不再丢弃）', () =
 
 test('userScripts: 存档里是非数组 → migrate 置 undefined', () => {
   store.clear();
-  putRaw(JSON.stringify({ version: 1, entries: [], endingReached: false, userScripts: 'not-array' }));
+  putRaw(
+    JSON.stringify({ version: 1, entries: [], endingReached: false, userScripts: 'not-array' }),
+  );
   const loaded = loadSave();
   assert.equal(loaded.userScripts, undefined, '非数组 userScripts 应被丢弃');
   assert.equal(loaded.entries.length, 0, '其余字段仍应正常恢复');
@@ -236,7 +238,13 @@ test('并发安全：连续多次 writeSave（last-write-wins）后 loadSave 读
   for (let i = 1; i <= 20; i++) {
     const s = createEmptySave();
     for (let j = 1; j <= i; j++) {
-      s.entries.push({ index: j, situation: `s${j}`, deed: `d${j}`, verdict: `v${j}`, tone: '庄严' });
+      s.entries.push({
+        index: j,
+        situation: `s${j}`,
+        deed: `d${j}`,
+        verdict: `v${j}`,
+        tone: '庄严',
+      });
     }
     writeSave(s);
   }

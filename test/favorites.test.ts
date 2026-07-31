@@ -28,9 +28,9 @@ globalThis.localStorage = {
 
 // ---------- 困境分类 ----------
 
-test('6 个离线剧本都有合法分类', () => {
+test('全部离线剧本都有合法分类', () => {
   const scripts = fallbackScripts();
-  assert.equal(scripts.length, 6);
+  assert.ok(scripts.length >= 6, '剧本池不应少于初始 6 个');
   for (const s of scripts) {
     const cat = s.situation.category;
     assert.ok(cat, `剧本「${s.situation.situation.slice(0, 10)}…」缺分类`);
@@ -41,16 +41,13 @@ test('6 个离线剧本都有合法分类', () => {
   }
 });
 
-test('6 个离线剧本分类覆盖至少 6 个不同题材', () => {
+test('离线剧本分类覆盖全部 8 个题材', () => {
   const cats = new Set(fallbackScripts().map((s) => s.situation.category as Category));
-  // 医疗/职场/司法/科技/战争/人性 各一
-  assert.ok(cats.has('医疗'));
-  assert.ok(cats.has('职场'));
-  assert.ok(cats.has('司法'));
-  assert.ok(cats.has('科技'));
-  assert.ok(cats.has('战争'));
-  assert.ok(cats.has('人性'));
-  assert.ok(cats.size >= 6);
+  // 8 个题材各至少一个：医疗/职场/司法/科技/战争/人性/亲情/金钱
+  for (const c of ALL_CATEGORIES) {
+    assert.ok(cats.has(c), `题材「${c}」在剧本池中缺失`);
+  }
+  assert.ok(cats.size >= 8);
 });
 
 // ---------- 收藏夹 ----------

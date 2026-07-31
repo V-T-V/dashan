@@ -92,7 +92,12 @@ function installFetchMock(
     url: string,
     init: RequestInit,
     count: number,
-  ) => Promise<{ status: number; ok: boolean; text: () => Promise<string>; json: () => Promise<unknown> }>,
+  ) => Promise<{
+    status: number;
+    ok: boolean;
+    text: () => Promise<string>;
+    json: () => Promise<unknown>;
+  }>,
 ): { uninstall: () => void; calls: { url: string; init: RequestInit }[] } {
   const savedFetch = globalThis.fetch;
   const savedWarn = console.warn;
@@ -120,7 +125,12 @@ async function withFetchMock<T>(
     url: string,
     init: RequestInit,
     count: number,
-  ) => Promise<{ status: number; ok: boolean; text: () => Promise<string>; json: () => Promise<unknown> }>,
+  ) => Promise<{
+    status: number;
+    ok: boolean;
+    text: () => Promise<string>;
+    json: () => Promise<unknown>;
+  }>,
   fn: (calls: { url: string; init: RequestInit }[]) => Promise<T>,
 ): Promise<T> {
   const mock = installFetchMock(impl);
@@ -243,7 +253,9 @@ test('HttpLLMClient: context 注入一条含称号的 system 消息到请求体'
         return calls;
       }),
   );
-  const body = JSON.parse(String(calls[0]!.init.body)) as { messages: { role: string; content: string }[] };
+  const body = JSON.parse(String(calls[0]!.init.body)) as {
+    messages: { role: string; content: string }[];
+  };
   const ctxMsg = body.messages.find((m) => m.content.includes('大善之人'));
   assert.ok(ctxMsg, '请求体应含注入的境界 system 消息');
   assert.ok(ctxMsg!.content.includes('7'), '应含 deedCount');
@@ -430,7 +442,15 @@ test('normalizeResponse: turn 缺 praise 抛错', () => {
   assert.throws(
     () =>
       normalizeResponse(
-        { type: 'turn', tone: '佛系', nextSituation: 'x', choices: [{ id: 'A', text: 'a' }, { id: 'B', text: 'b' }] },
+        {
+          type: 'turn',
+          tone: '佛系',
+          nextSituation: 'x',
+          choices: [
+            { id: 'A', text: 'a' },
+            { id: 'B', text: 'b' },
+          ],
+        },
         'x',
       ),
     /缺少或空的字段：praise/,
@@ -439,7 +459,15 @@ test('normalizeResponse: turn 缺 praise 抛错', () => {
 
 test('normalizeResponse: situation 的 category 非法时被丢弃（undefined）', () => {
   const res = normalizeResponse(
-    { type: 'situation', category: '不存在的分类', situation: 'x', choices: [{ id: 'A', text: 'a' }, { id: 'B', text: 'b' }] },
+    {
+      type: 'situation',
+      category: '不存在的分类',
+      situation: 'x',
+      choices: [
+        { id: 'A', text: 'a' },
+        { id: 'B', text: 'b' },
+      ],
+    },
     '',
   ) as { type: string; category?: string };
   assert.equal(res.type, 'situation');
@@ -447,10 +475,7 @@ test('normalizeResponse: situation 的 category 非法时被丢弃（undefined�
 });
 
 test('normalizeResponse: 未知 type 抛错', () => {
-  assert.throws(
-    () => normalizeResponse({ type: 'mystery', situation: 'x' }, 'x'),
-    /未知 type/,
-  );
+  assert.throws(() => normalizeResponse({ type: 'mystery', situation: 'x' }, 'x'), /未知 type/);
 });
 
 test('normalizeResponse: 非对象直接抛错', () => {
@@ -470,7 +495,14 @@ test('normalizeResponse: choice.text 为空抛错', () => {
   assert.throws(
     () =>
       normalizeResponse(
-        { type: 'situation', situation: 'x', choices: [{ id: 'A', text: '' }, { id: 'B', text: 'b' }] },
+        {
+          type: 'situation',
+          situation: 'x',
+          choices: [
+            { id: 'A', text: '' },
+            { id: 'B', text: 'b' },
+          ],
+        },
         '',
       ),
     /text 为空/,
