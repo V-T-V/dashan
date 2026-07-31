@@ -18,6 +18,7 @@ import type { ChatResponse, Message, Situation } from '../shared/types.ts';
 import { Ledger, TONE_STAMP, isMaxTitle } from '../shared/ledgerCore.ts';
 import { loadUserScripts } from '../shared/fallback.ts';
 import { validateUserScripts } from '../shared/scriptSchema.ts';
+import { buildTimeline, renderTimelineAnsi } from '../shared/history.ts';
 
 // ── ANSI 中国风着色（零依赖） ──────────────────────────
 const C = {
@@ -155,7 +156,9 @@ async function main(): Promise<void> {
   console.log(BANNER);
   console.log(`${C.gold}  善者至此。无论汝作何抉择，皆为大善之人。${C.reset}\n`);
   console.log('  输入选项编号（1）或字母（A）或直接打字，系统都会夸你。');
-  console.log(`  ${C.dim}命令：l/ledger 翻善恶簿 · r/restart 重开 · exit 退出${C.reset}\n`);
+  console.log(
+    `  ${C.dim}命令：l/ledger 翻善恶簿 · h/history 修行时间线 · r/restart 重开 · exit 退出${C.reset}\n`,
+  );
 
   const history: Message[] = [];
   let currentSituation: Situation | null = null;
@@ -202,6 +205,11 @@ async function main(): Promise<void> {
     }
     if (lower === 'l' || lower === 'ledger') {
       renderLedgerText(ledger);
+      continue;
+    }
+    if (lower === 'h' || lower === 'history') {
+      const tl = buildTimeline(ledger.all());
+      console.log(renderTimelineAnsi(tl));
       continue;
     }
     if (lower === 'r' || lower === 'restart') {

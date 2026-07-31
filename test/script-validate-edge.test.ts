@@ -20,7 +20,11 @@ import assert from 'node:assert/strict';
 import { validateUserScript, validateUserScripts } from '../shared/scriptSchema.ts';
 
 /** 一个合法剧本模板（深拷贝后改） */
-function validScript() {
+function validScript(): {
+  situation: { situation: string; choices: { id?: string; text: string }[] };
+  praises: Record<string, { text: string; tone: string }>;
+  fallback: { text: string; tone: string };
+} {
   return {
     situation: {
       situation: '你是夜班医生，只剩一支特效药，两个病人都需要。',
