@@ -19,6 +19,7 @@ import { Ledger, TONE_STAMP, isMaxTitle } from '../shared/ledgerCore.ts';
 import { loadUserScripts } from '../shared/fallback.ts';
 import { validateUserScripts } from '../shared/scriptSchema.ts';
 import { buildTimeline, renderTimelineAnsi } from '../shared/history.ts';
+import { textCardFromEntries } from '../shared/card.ts';
 
 // ── ANSI 中国风着色（零依赖） ──────────────────────────
 const C = {
@@ -157,7 +158,7 @@ async function main(): Promise<void> {
   console.log(`${C.gold}  善者至此。无论汝作何抉择，皆为大善之人。${C.reset}\n`);
   console.log('  输入选项编号（1）或字母（A）或直接打字，系统都会夸你。');
   console.log(
-    `  ${C.dim}命令：l/ledger 翻善恶簿 · h/history 修行时间线 · r/restart 重开 · exit 退出${C.reset}\n`,
+    `  ${C.dim}命令：l/ledger 翻善恶簿 · h/history 修行时间线 · s/share 分享卡片 · r/restart 重开 · exit 退出${C.reset}\n`,
   );
 
   const history: Message[] = [];
@@ -210,6 +211,14 @@ async function main(): Promise<void> {
     if (lower === 'h' || lower === 'history') {
       const tl = buildTimeline(ledger.all());
       console.log(renderTimelineAnsi(tl));
+      continue;
+    }
+    if (lower === 's' || lower === 'share') {
+      // 生成纯文本分享卡片并打印（可直接复制到聊天/微博）
+      const card = textCardFromEntries(ledger.all());
+      hr();
+      console.log(`\n${card}\n`);
+      console.log(`${C.dim}（复制上方方框内文字即可分享你的善名）${C.reset}\n`);
       continue;
     }
     if (lower === 'r' || lower === 'restart') {
