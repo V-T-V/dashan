@@ -75,6 +75,8 @@ function migrate(parsed: Partial<DashanSave>): DashanSave {
         ? (parsed.currentSituation as Situation)
         : undefined,
     cursor: typeof parsed.cursor === 'number' ? parsed.cursor : undefined,
+    // 用户自定义剧本：保留为数组（损坏/非数组 → undefined，调用方按"无剧本"处理）
+    userScripts: Array.isArray(parsed.userScripts) ? parsed.userScripts : undefined,
   };
 }
 
