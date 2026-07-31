@@ -108,8 +108,8 @@ test('buildMessages：消息角色顺序——system 永远首条，user 永远�
 test('buildMessages：context 注入境界摘要，含 title 与 deedCount', () => {
   const ctx: PlayerContext = { title: '至善尊者', deedCount: 42 };
   const msgs = buildMessages([], '', ctx);
-  // system + 境界摘要 system + user = 3
-  assert.equal(msgs.length, 3);
+  // system + 境界摘要 system + 难度递进 system + user = 4
+  assert.equal(msgs.length, 4);
   assert.equal(msgs[1]!.role, 'system');
   assert.ok(msgs[1]!.content.includes('至善尊者'));
   assert.ok(msgs[1]!.content.includes('42'));
@@ -118,7 +118,7 @@ test('buildMessages：context 注入境界摘要，含 title 与 deedCount', () 
 test('buildMessages：context.dominantTone 缺失 → 摘要不含语气片段但仍注入', () => {
   const ctx: PlayerContext = { title: '善人', deedCount: 1 }; // 无 dominantTone
   const msgs = buildMessages([], '', ctx);
-  assert.equal(msgs.length, 3);
+  assert.equal(msgs.length, 4);
   assert.ok(msgs[1]!.content.includes('善人'));
   assert.ok(msgs[1]!.content.includes('境界')); // 仍有递进呼应文案
 });

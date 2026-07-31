@@ -263,13 +263,15 @@ class FallbackClient implements LLMClient {
     await delay(300);
 
     const lastChoice = req.userChoice ?? '';
+    // 境界摘要里的 deedCount 用于难度递进筛选（未提供则不过滤）
+    const deedCount = req.context?.deedCount;
     if (!lastChoice) {
       // 首回合：给第一个情境
-      const first = pickFallbackFirstSituation();
+      const first = pickFallbackFirstSituation(deedCount);
       return { type: 'situation', ...first };
     }
     // 用户已选择：给夸赞 + 下一个情境
-    const turn = pickFallbackTurn(lastChoice);
+    const turn = pickFallbackTurn(lastChoice, deedCount);
     return { type: 'turn', ...turn };
   }
 }

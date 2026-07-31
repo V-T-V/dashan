@@ -5,6 +5,7 @@
  */
 
 import type { Message, PlayerContext } from './types.ts';
+import { difficultyGuidance, deedCountToLevel } from './difficulty.ts';
 
 /**
  * 系统提示词。它定义了大善系统的人格、生成规则与输出格式约束。
@@ -133,6 +134,11 @@ export function buildMessages(
     msgs.push({
       role: 'system',
       content: parts.join('') + '。请在夸赞中呼应此境界，让用户感到善名愈深、境界愈高。',
+    });
+    // 难度递进引导：让真实 LLM 也按境界生成更复杂的困境
+    msgs.push({
+      role: 'system',
+      content: difficultyGuidance(deedCountToLevel(context.deedCount)),
     });
   }
   msgs.push({

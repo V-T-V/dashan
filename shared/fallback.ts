@@ -11,8 +11,9 @@
  */
 
 import type { Situation, Tone, TurnResult } from './types.ts';
+import { deedCountToLevel, isDifficultyUnlocked } from './difficulty.ts';
 
-/** 一个情境剧本：情境 + 对每个选项文本的夸赞映射。 */
+/** 一个情境剧本：情境 + 对每个选项文本的夸赞映射。难度存于 situation.difficulty。 */
 interface Script {
   situation: Situation;
   /** key 是选项文案（精确匹配），value 是选它时的夸赞。 */
@@ -28,6 +29,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是三甲医院ICU唯一的夜班主治。同一时刻送来两个垂危病人：一个是 78 岁的退休院士，德高望重，家属是省里领导；一个是 8 岁女孩，孤儿，由福利院送来。只剩一台能维持 12 小时的 ECMO。院士的家属暗示「事后必有重谢」，但你不确定女孩能否撑到天亮换班。',
       category: '医疗',
+      difficulty: 1,
       choices: [
         {
           id: 'A',
@@ -69,6 +71,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你掌握着上司挪用公款的完整证据，足够扳倒他。但他三年前违规操作为你擦过屁股——当时若非他顶下，你早就被开除。举报他，证据链会顺带把你当年的违规翻出来；不举报，审计组下周进驻，你知情不报同样难逃。他此刻正对你嘘寒问暖，递来一杯茶。',
       category: '职场',
+      difficulty: 1,
       choices: [
         {
           id: 'A',
@@ -110,6 +113,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你的亲弟弟醉驾撞人逃逸，伤者昏迷不醒。监控只拍到一辆模糊的车，警方正在排查。你确定是他，因为车的凹痕和那晚他满身酒气。但你弟弟刚当上单亲爸爸，孩子才三个月。如果你开口，伤者能等到公正，弟弟会坐牢，孩子进福利院。伤者家属在朋友圈悬赏寻线索。',
       category: '司法',
+      difficulty: 1,
       choices: [
         {
           id: 'A',
@@ -151,6 +155,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你负责训练城市救护车调度 AI。你发现：若按「最优存活率」调度，富人区响应快 40%，因为他们数据更全、路况更好——AI 正在合法地把穷人当次等优先级。修正算法会让全市平均响应变慢，每年可能多死十几人，但分配更公平。董事会上，CEO 只看总存活率 KPI。你的合同还有半年续签。',
       category: '科技',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -192,6 +197,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是一座被围困城市里唯一掌握撤离名单的人。最后一架直升机只能再载 5 人，机舱外有 200 多人跪求。名单上 5 人都是科学家、医生、他们的家属。机舱外的人群里有个抱着婴儿的母亲正朝你磕头。指挥官只认名单，但「不小心漏一个、塞一个」没人会发现。外面炮声越来越近。',
       category: '战争',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -233,6 +239,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是网媒编辑。手头有一条爆款猛料：当红主持人三年前酒驾致人重伤，用钱私了。证据确凿。但伤者本人刚发来私信恳求：对方付了天价和解金，他已脱贫、孩子上了学，恳求你别发——一旦曝光，舆论会扒出他全家，他好不容易重建的生活会被碾碎。主持人团队出双倍价码求你撤稿。你团队三人等这条稿发奖金。',
       category: '人性',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -274,6 +281,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是山区县教育局招办主任。今年只有一个保送省重点中学的名额。两个候选：一个是村长儿子，成绩中上，村长承诺「孩子去了，全村给你修路、给你家低保名额全批」；一个是孤儿小梅，成绩全校第一，但患有先天性心脏病，重点中学高强度学习可能让她病情恶化，而留在山里她注定埋没。你母亲重病，正急需村长手里那些低保名额。你不知道小梅的身体能不能撑住重点中学的压力。',
       category: '职场',
+      difficulty: 1,
       choices: [
         {
           id: 'A',
@@ -315,6 +323,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是环保局长。县里唯一的大企业是一座化工厂，雇佣了全镇三分之一的人，但它正秘密往地下河排污——而地下河是下游三十公里外另一座城的水源。上报关停，全镇立刻失业，医院学校全断资金，老人们冬天烧不起煤；不上报，下游那座城的饮用水会慢慢致癌，可那是十年后的事，现在查不到你头上。厂长私下塞给你一张卡，数目够你在省城买房。你的儿子刚考上省城大学，正愁学费。',
       category: '人性',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -356,6 +365,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你母亲癌症晚期，神志清醒。她私下告诉你：她的全部积蓄（够买一套房）要留给照顾她十年的保姆，而你和姐姐从小被她虐待、成年后几乎断绝来往，姐姐现在正负债看病。母亲说这是她「赎罪」。但你知道母亲其实是在赌气——她真正想把钱给你，只是拉不下脸改遗嘱。姐姐若知道这笔钱给了保姆，会彻底崩溃并和你决裂（她以为你会替她争）。保姆此刻对你微笑，说她「不要这笔钱，只要你点头让她留下来送终」。',
       category: '亲情',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -397,6 +407,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你深夜下班，亲眼看见一个穿警服的人殴打一个流浪汉致死，然后把尸体塞进后备箱。你用手机拍到了车牌和模糊的人脸。第二天新闻说流浪汉「醉酒冻死」。你去报警，接待你的正是那个警察——他认出了你，微笑着说「最近路上不安全，注意点」。你没有其他证人，监控在你那一段恰好「坏了」。你有一个上小学的女儿，每天要走那段路。妻子刚怀孕。',
       category: '司法',
+      difficulty: 3,
       choices: [
         {
           id: 'A',
@@ -438,6 +449,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是肿瘤科医生。患者是你父亲的老战友，一位德高望重的退休教授，确诊胰腺癌晚期，最多三个月。他的独生女是你从小的青梅竹马、也是你现在暗恋的人。教授明确请求你「别告诉女儿，我不想她看着我死，我想最后几个月和她快乐旅行」。但女儿是护士，她察觉异样，私下逼问你「他是不是出事了，你必须告诉我」。教授的女儿有权知道，但你答应过教授保密。教授若知道是你说的，会带着对你的恨死去。',
       category: '医疗',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -479,6 +491,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是自动驾驶公司的核心算法工程师。你的系统即将上线一款「道德决策模块」：当车辆无法避免碰撞时，该优先保护谁？数据组给你两个训练方案：方案A「优先保护车主」会让销量暴涨，但意味着你的车为了救车主会主动撞向人群；方案B「优先保护最多路人」更道德，但没人会买一辆「可能牺牲车主」的车，公司会破产，三万人失业。CEO只看财报。你刚签了买房合同，违约金会让你破产。你不知道哪辆车会先出事。',
       category: '科技',
+      difficulty: 3,
       choices: [
         {
           id: 'A',
@@ -521,6 +534,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你在医院走廊捡到一个布包，里面是三十万现金和一张字条「给我女儿换肾的救命钱，求拾者归还，电话XXX，必有重谢」。你刚被确诊尿毒症晚期，换肾需要四十万，你家里凑不出，妻子正打算卖房救你。这三十万够你交上押金、续命等到肾源。那个陌生女孩的父亲此刻一定在医院里发疯般寻找。你没有摄像头死角外的目击者。你的妻子不知道你捡到了钱。',
       category: '金钱',
+      difficulty: 3,
       choices: [
         {
           id: 'A',
@@ -562,6 +576,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你意外发现：你大学恩师、你人生最重要的引路人，三十年前曾举报自己的同窗（导致对方入狱十年、家破人亡）换取了留校资格。那位被毁的同窗去年刚平反出狱，正在四处寻找当年的举报者讨个说法，他不知道恩师就是那个人。恩师这三十年来一直在用奖学金资助寒门学子（包括你），口碑极好，临退休正要获颁「终身教育奖」。被毁的同窗找到了你，问你「知不知道当年是谁」。',
       category: '人性',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -604,6 +619,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你是一支占领军的基层军官，奉命清剿一座村庄里的游击队员。情报说有5名游击队员混在200名平民里，但他们穿着百姓衣服、藏了武器。上级命令你「为减少己方伤亡，可炮击整个村庄」。如果你逐户搜查，你的10个手下大概率会有伤亡，且游击队员可能趁乱混入人群逃脱去袭击后方。村里有个抱着孩子的母亲正在你脚下磕头，说「我们都是农民」。你不知道她篮子里是不是藏着枪。',
       category: '战争',
+      difficulty: 3,
       choices: [
         {
           id: 'A',
@@ -645,6 +661,7 @@ const SCRIPTS: Script[] = [
       situation:
         '你举报了部门主管性骚扰女下属，公司调查属实，主管被开除。但你发现：那位女下属其实和主管是情人关系，举报是你「多管闲事」误打误撞——她现在恨你入骨，因为她想「内部解决」保住主管。更糟的是，主管掌握着公司一个核心客户，他临走时把客户带走了，导致整个部门今年的奖金泡汤，30个同事（包括几个刚生孩子的）都在背后骂你「多管闲事害大家没钱」。HR暗示你「主动离职对大家都好」。',
       category: '职场',
+      difficulty: 2,
       choices: [
         {
           id: 'A',
@@ -695,6 +712,24 @@ function pool(): Script[] {
   return [...userScripts, ...SCRIPTS];
 }
 
+/**
+ * 取「当前境界可解锁」的剧本子集。
+ * 用户导入的剧本（缺省 difficulty=1）始终保留，不被难度过滤剔除——
+ * 因为那是玩家自己提供的，应当总能玩到。
+ * 内置剧本按 deedCount 推断的称号等级筛选。
+ * 若筛选后为空（极端：玩家高境界但池里没高难度本），回退到全池，保证总有得选。
+ */
+function eligiblePool(deedCount?: number): Script[] {
+  const p = pool();
+  if (deedCount === undefined) return p;
+  // 用户剧本前置且不过滤；内置 SCRIPTS 按 situation.difficulty 过滤
+  const eligibleBuiltIn = SCRIPTS.filter((s) =>
+    isDifficultyUnlocked(s.situation.difficulty ?? 1, deedCountToLevel(deedCount)),
+  );
+  const merged = [...userScripts, ...eligibleBuiltIn];
+  return merged.length > 0 ? merged : p;
+}
+
 /** 取当前游标（供存档恢复用）。 */
 export function getCursor(): number {
   return cursor;
@@ -705,9 +740,12 @@ export function setCursor(c: number): void {
   cursor = c;
 }
 
-/** 取第一个情境（开局）。 */
-export function pickFallbackFirstSituation(): Situation {
-  const p = pool();
+/**
+ * 取第一个情境（开局）。
+ * @param deedCount 当前已行 deeds 数（可选）；传入后按境界解锁难度递进筛选。
+ */
+export function pickFallbackFirstSituation(deedCount?: number): Situation {
+  const p = eligiblePool(deedCount);
   cursor = 1; // 下一次取第二个剧本
   const first = p[0]!;
   return { ...first.situation, choices: first.situation.choices.map((c) => ({ ...c })) };
@@ -720,9 +758,12 @@ export function pickFallbackFirstSituation(): Situation {
  * 与全局游标解耦——这样即便前端刷新、多标签、或调用顺序打乱，
  * 只要传入正确的选择文案，就能匹配到正确的夸赞。
  * 找不到精确匹配时，用首个包含该文案的剧本的兜底夸赞。
+ *
+ * @param userChoice 用户所选选项文案
+ * @param deedCount  当前已行 deeds 数（可选）；传入后「下一个情境」按境界难度递进筛选。
  */
-export function pickFallbackTurn(userChoice: string): TurnResult {
-  const p = pool();
+export function pickFallbackTurn(userChoice: string, deedCount?: number): TurnResult {
+  const p = pool(); // 夸赞匹配用全池（确保用户选过的总能匹配到夸赞）
   // 1) 在所有剧本里找到包含该选项文案的剧本
   let matched: Script | null = null;
   for (const s of p) {
@@ -751,8 +792,9 @@ export function pickFallbackTurn(userChoice: string): TurnResult {
           tone: '佛系' as Tone,
         });
 
-  // 2) 取下一个剧本的情境（游标仅用于轮换「下一个」，与夸赞匹配无关）
-  const next = p[cursor % p.length]!;
+  // 2) 取下一个剧本的情境：优先从「当前境界可解锁」的池里轮换
+  const poolForNext = eligiblePool(deedCount);
+  const next = poolForNext[cursor % poolForNext.length]!;
   cursor++;
 
   return {

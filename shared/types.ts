@@ -56,7 +56,16 @@ export interface Situation {
   choices: Choice[];
   /** 困境题材分类（LLM 生成或离线剧本标注；可缺省）。 */
   category?: Category;
+  /**
+   * 难度等级（1=初阶 / 2=进阶 / 3=深渊），用于难度递进系统。
+   * 缺省视为 1。玩家称号等级越高，可解锁更高难度的困境。
+   * 离线剧本标注；LLM 模式下可由 prompt 引导生成。
+   */
+  difficulty?: Difficulty;
 }
+
+/** 困境难度三档：随玩家善名境界递进解锁。 */
+export type Difficulty = 1 | 2 | 3;
 
 /** 对用户本次选择的回应：一段夸赞 + 下一个情境。 */
 export interface TurnResult {
