@@ -22,6 +22,7 @@ import { initEditor, openEditor } from './editor.ts';
 import {
   addEntry,
   allEntries,
+  allToneStats,
   clearEntries,
   clearEndingMark,
   currentDominantTone,
@@ -38,6 +39,17 @@ import {
   toggleLedger,
 } from './ledger.ts';
 import { isMaxTitle } from '../shared/ledgerCore.ts';
+import type { Tone } from '../shared/types.ts';
+
+/** 语气 → emoji（结局页条形图用）。 */
+const TONE_EMOJI: Record<Tone, string> = {
+  庄严: '🏛️',
+  戏谑: '🎭',
+  佛系: '🪷',
+  学术: '📚',
+  江湖: '⚔️',
+  温情: '🤍',
+};
 import {
   addFavorite,
   closeFavorites,
@@ -283,6 +295,21 @@ function showEnding(): void {
   };
   const e = ENDINGS[ending] ?? ENDINGS['超脱']!;
 
+  // 语气分布统计（决定结局走向的直观展示）
+  const toneStats = allToneStats();
+  const maxTone = Math.max(1, ...Object.values(toneStats));
+  const toneBars = Object.entries(toneStats)
+    .map(([tone, count]) => {
+      const pct = Math.round((count / maxTone) * 100);
+      const emoji = TONE_EMOJI[tone as Tone] ?? '·';
+      return `<div class="ending-tone-row">
+        <span class="ending-tone-label">${emoji} ${tone}</span>
+        <div class="ending-tone-bar-bg"><div class="ending-tone-bar tone-${tone}" style="width:${pct}%"></div></div>
+        <span class="ending-tone-count">${count}</span>
+      </div>`;
+    })
+    .join('');
+
   const panel = document.createElement('div');
   panel.className = `msg msg-system msg-ending ${e.cls}`;
   panel.innerHTML = `
@@ -291,6 +318,10 @@ function showEnding(): void {
       <p>你已在「${escapeHtmlText(title)}」之境，行过 <b>${totalDeeds()}</b> 桩事——</p>
       <p class="ending-deeds">${escapeHtmlText(deeds || '一念之间')}</p>
       <p>${e.desc}</p>
+      <div class="ending-tone-stats">
+        <div class="ending-tone-title">📊 你的语气分布（决定结局走向）</div>
+        ${toneBars}
+      </div>
     </div>
     <div class="ending-actions">
       <button id="ending-new" class="ending-btn" type="button">📜 再启新卷</button>
@@ -432,7 +463,8 @@ function updateFavCurrentBtn(forceText?: string): void {
   if (forceText) {
     btn.textContent = forceText;
     window.setTimeout(() => {
-      if (currentSituation) btn.textContent = isFavorited(currentSituation.situation) ? '★ 已收藏' : '☆ 收藏本情境';
+      if (currentSituation)
+        btn.textContent = isFavorited(currentSituation.situation) ? '★ 已收藏' : '☆ 收藏本情境';
     }, 1200);
     return;
   }

@@ -17,7 +17,14 @@
 import { env } from './env.ts';
 import { isRetryableStatus, withRetry } from './retry.ts';
 import { pickFallbackTurn, pickFallbackFirstSituation } from './fallback.ts';
-import { type Category, ALL_CATEGORIES, type ChatRequest, type ChatResponse, type Message, type Tone } from './types.ts';
+import {
+  type Category,
+  ALL_CATEGORIES,
+  type ChatRequest,
+  type ChatResponse,
+  type Message,
+  type Tone,
+} from './types.ts';
 
 /** LLM 客户端接口：输入对话历史 + 用户选择，输出一回合的结构化响应。 */
 export interface LLMClient {
@@ -108,7 +115,9 @@ function pickCategory(obj: Record<string, unknown>, key: string): Category | und
   const v = obj[key];
   if (typeof v !== 'string') return undefined;
   const trimmed = v.trim();
-  return (ALL_CATEGORIES as readonly string[]).includes(trimmed) ? (trimmed as Category) : undefined;
+  return (ALL_CATEGORIES as readonly string[]).includes(trimmed)
+    ? (trimmed as Category)
+    : undefined;
 }
 
 /** 从对象中安全取 choices 数组并校验长度与结构。 */

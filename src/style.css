@@ -1706,3 +1706,101 @@ body {
   font-size: 13px;
   line-height: 1.8;
 }
+
+/* ════════ 结局页语气分布条形图 ════════ */
+.ending-tone-stats {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+.ending-tone-title {
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.ending-tone-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.ending-tone-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  min-width: 70px;
+  text-align: right;
+}
+.ending-tone-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ending-tone-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.ending-tone-bar.tone-庄严 {
+  background: #9b59b6;
+}
+.ending-tone-bar.tone-戏谑 {
+  background: #e67e22;
+}
+.ending-tone-bar.tone-佛系 {
+  background: #16a085;
+}
+.ending-tone-bar.tone-学术 {
+  background: #3498db;
+}
+.ending-tone-bar.tone-江湖 {
+  background: #e74c3c;
+}
+.ending-tone-bar.tone-温情 {
+  background: #f1c40f;
+}
+.ending-tone-count {
+  font-size: 11px;
+  color: var(--text-main);
+  min-width: 24px;
+  text-align: left;
+}
+
+/* ════════ 善恶簿统计里程碑 ════════ */
+.ledger-milestone {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+}
+.milestone-title {
+  font-size: 13px;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.milestone-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+.milestone-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gold);
+}
+.milestone-label {
+  font-size: 10px;
+  color: var(--text-dim);
+}

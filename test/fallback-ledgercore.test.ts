@@ -11,11 +11,7 @@ import {
   pickFallbackTurn,
   fallbackScriptCount,
 } from '../shared/fallback.ts';
-import {
-  titleLevel,
-  isMaxTitle,
-  TITLES,
-} from '../shared/ledgerCore.ts';
+import { titleLevel, isMaxTitle, TITLES } from '../shared/ledgerCore.ts';
 
 // ---- fallback.ts ----
 

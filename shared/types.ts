@@ -14,15 +14,7 @@ export type Tone =
   | '温情'; // 暖心升华
 
 /** 困境题材分类（与 prompt 里的 8 个题材库对应）。 */
-export type Category =
-  | '职场'
-  | '医疗'
-  | '司法'
-  | '战争'
-  | '亲情'
-  | '金钱'
-  | '科技'
-  | '人性';
+export type Category = '职场' | '医疗' | '司法' | '战争' | '亲情' | '金钱' | '科技' | '人性';
 
 /** 全部分类（展示顺序 + 收藏筛选用）。 */
 export const ALL_CATEGORIES: readonly Category[] = [

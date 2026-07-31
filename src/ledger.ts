@@ -7,6 +7,7 @@
 
 import { Ledger, TITLES, TONE_STAMP, escapeHtml, type EndingType } from '../shared/ledgerCore.ts';
 import { type DashanSave, createEmptySave, loadSave, writeSave } from '../shared/persistence.ts';
+import { loadFavorites } from './favorites.ts';
 import type { Message, Situation, Tone } from '../shared/types.ts';
 import {
   loadUserScripts,
@@ -176,6 +177,11 @@ export function currentEndingType(): EndingType {
   return ledger.endingType();
 }
 
+/** 当前语气分布统计（结局页条形图用）。 */
+export function allToneStats(): Record<Tone, number> {
+  return ledger.toneStats();
+}
+
 /** 当前主导语气（占比最高），供 LLM 个性化。 */
 export function currentDominantTone(): Tone | undefined {
   const stats = ledger.toneStats();
@@ -253,6 +259,34 @@ export function renderLedger(): void {
     })
     .join('');
   container.appendChild(wallEl);
+
+  // ── 统计里程碑区 ──
+  const favCount = loadFavorites().length;
+  const milestoneEl = document.createElement('div');
+  milestoneEl.className = 'ledger-milestone';
+  const toneTotal = Object.values(stats).reduce((a, b) => a + b, 0);
+  const dominantTone = Object.entries(stats).sort((a, b) => b[1] - a[1])[0];
+  milestoneEl.innerHTML = `
+    <div class="milestone-title">📊 修行统计</div>
+    <div class="milestone-grid">
+      <div class="milestone-cell">
+        <span class="milestone-num">${entries.length}</span>
+        <span class="milestone-label">总抉择</span>
+      </div>
+      <div class="milestone-cell">
+        <span class="milestone-num">${favCount}</span>
+        <span class="milestone-label">收藏</span>
+      </div>
+      <div class="milestone-cell">
+        <span class="milestone-num">${endingReached() ? '✓' : '—'}</span>
+        <span class="milestone-label">已结局</span>
+      </div>
+      <div class="milestone-cell">
+        <span class="milestone-num">${toneTotal > 0 ? (dominantTone?.[0] ?? '—') : '—'}</span>
+        <span class="milestone-label">主导语气</span>
+      </div>
+    </div>`;
+  container.appendChild(milestoneEl);
 
   // ── 倒序条目列表 ──
   for (let i = entries.length - 1; i >= 0; i--) {
