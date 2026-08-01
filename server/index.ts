@@ -10,14 +10,21 @@
  * - 500 错误只对外回固定文案，堆栈进日志，不外泄内部细节。
  *
  * 路由：
- *   POST /api/chat   { messages, userChoice? }  →  ChatResponse
- *   GET  /api/health →  { ok, stub, version, model, uptime }
+ *   POST /api/chat     { messages, userChoice? }  →  ChatResponse
+ *   GET  /api/health   →  { ok, stub, version, model, uptime }
+ *   GET  /api/history  →  { timeline }（修行时间线，由 store 派生）
+ *   POST /api/history  { entries }  →  覆盖同步善恶簿到 server 侧
+ *   GET  /api/titles   →  { titles, current, progress }（8 级称号体系 + 当前进度）
+ *   POST /api/reset    →  { ok }（清空 server 侧会话存储）
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { loadEnv, env } from '../shared/env.ts';
 import { createLLM, type LLMClient } from '../shared/llm.ts';
 import type { ChatRequest, ChatResponse, Message } from '../shared/types.ts';
+import { TITLES, titleLevel, progressToNextTitle } from '../shared/ledgerCore.ts';
+import { buildTimeline } from '../shared/history.ts';
+import { MemorySessionStore, normalizeEntries, type SessionStore } from './store.ts';
 
 const PORT = Number(env('KINDNESS_SERVER_PORT', '5180')) || 5180;
 /** 请求体大小上限（字节），默认 64KB。对话历史远小于此。 */
@@ -128,11 +135,14 @@ export function createApp(opts: {
   model?: string;
   maxBody?: number;
   corsOrigin?: string;
+  /** 进程内会话存储（/api/history、/api/reset 用）；缺省新建单例。 */
+  store?: SessionStore;
 }): Server {
   const { llm } = opts;
   const llmModel = opts.model ?? env('KINDNESS_LLM_MODEL', 'glm-4-flash');
   const maxBody = opts.maxBody ?? MAX_BODY;
   const corsOrigin = opts.corsOrigin ?? CORS_ORIGIN;
+  const store = opts.store ?? new MemorySessionStore();
   const startedAt = Date.now();
 
   const server = createServer(async (req, res) => {
@@ -177,6 +187,58 @@ export function createApp(opts: {
         console.error('[大善 server] 处理失败：', stack);
         sendJsonWith(res, 500, { error: '内部错误，请稍后重试' }, corsOrigin);
       }
+      return;
+    }
+
+    // 修行时间线（读）：由 server 侧 store 派生，不依赖浏览器 localStorage
+    if (req.method === 'GET' && url.startsWith('/api/history')) {
+      const timeline = buildTimeline(store.entries());
+      sendJsonWith(res, 200, { timeline }, corsOrigin);
+      return;
+    }
+
+    // 修行时间线（写）：前端把 localStorage 的善恶簿同步上来，覆盖 server 侧
+    if (req.method === 'POST' && url.startsWith('/api/history')) {
+      try {
+        const parsed = await readJsonBody(req, maxBody);
+        const obj = (parsed ?? {}) as Record<string, unknown>;
+        const entries = normalizeEntries(obj['entries']);
+        store.setEntries(entries);
+        const timeline = buildTimeline(store.entries());
+        sendJsonWith(res, 200, { ok: true, count: store.count(), timeline }, corsOrigin);
+      } catch (e) {
+        if (e instanceof TooLargeError) {
+          sendJsonWith(res, 413, { error: '请求体过大' }, corsOrigin);
+          return;
+        }
+        const msg = e instanceof Error ? e.message : String(e);
+        sendJsonWith(res, 400, { error: msg }, corsOrigin);
+      }
+      return;
+    }
+
+    // 称号体系：8 级阶梯元数据 + 当前进度（供前端进度条渲染）
+    if (req.method === 'GET' && url.startsWith('/api/titles')) {
+      const count = store.count();
+      const level = titleLevel(count);
+      const progress = progressToNextTitle(count);
+      sendJsonWith(
+        res,
+        200,
+        {
+          titles: TITLES,
+          current: { count, level, name: TITLES[level]!.name },
+          progress,
+        },
+        corsOrigin,
+      );
+      return;
+    }
+
+    // 重置：清空 server 侧会话存储
+    if (req.method === 'POST' && url.startsWith('/api/reset')) {
+      store.clear();
+      sendJsonWith(res, 200, { ok: true, count: store.count() }, corsOrigin);
       return;
     }
 
