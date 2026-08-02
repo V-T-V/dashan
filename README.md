@@ -70,6 +70,70 @@
 
 ---
 
+## 高级功能
+
+### 🌍 多语言支持（i18n 骨架）
+
+`shared/i18n.ts` 提供 **简体中文 / English** 双语骨架，让「善恶由我定」可面向英文读者：
+
+- **`t(key, locale)`** 点分 key 系统：缺失文案自动回退到中文，再回退到 key 本身。
+- **英文版 SYSTEM_PROMPT**：与中文版同构（同铁律、同 JSON 格式、同题材库），要求 LLM 仍输出中文 `tone`/`category` 枚举（保持前端类型契约统一，仅展示层翻译）。
+- **翻转论证 5 法的 i18n key**：因果论 / 反伪善论 / 超越论 / 守恒论 / 破立论各有中英双语的名称与描述，可经 `flipArgumentName/Desc` 取展示文案。
+- **展示层映射**：8 称号、6 语气、8 题材、3 难度都有英文名（如「深渊」→ `Abyssal`、「佛系」→ `Zen`）。
+- **英文示例困境剧本**：结构严格兼容，可直接 `loadUserScripts` 注入离线池，验证「英文剧本也能在中文系统里跑」。
+
+### 🛠️ 自定义困境创建器
+
+`shared/customDilemma.ts`——用户输入「情境 + 2-4 个选项」，**自动生成诡辩式翻转夸赞**（无需 LLM，确定性离线生成）：
+
+- 输入校验：空情境 / 选项数越界 / 空字符串 / **重复选项文案** 都会被结构化错误拦截（不抛异常）。
+- 生成策略：每个选项轮换一种翻转手法（5 法）+ 一种语气（6 语气），用 `hashString` 把选项文案映射到稳定的模板，保证**同输入同输出**（可回放）。
+- 把选项文案嵌入夸赞模板，让你感到这是「针对你这一刀」的回应。
+- 生成的剧本结构合法（能通过 `scriptSchema.validateUserScript`），可直接注入 fallback pool 被 `pickFallbackTurn` 匹配。
+- 批量创建 / `flipDiversity` 多样性统计（告诉你这组困境用到了几种论证手法）。
+
+### 📊 统计面板
+
+`shared/stats.ts` 从善恶簿派生**图表友好的聚合数据**，供前端面板渲染：
+
+- **选项分布**（饼图）：A/B/C/D/自由输入 的选择占比。
+- **语气偏好**（柱图）：6 语气计数 + 主导语气 + 多样性（用到了几种语气）。
+- **题材 / 难度分布**：覆盖了几个题材、各难度几笔。
+- **活跃时长**：首笔到末笔的跨度（`humanizeDuration` 转 "2h 30m"）+ 每笔平均间隔（基于可选的 `ts` 字段，缺省安全回退）。
+- **称号阶梯进度**（进度条）：8 级每级的 unlocked/percent。
+- **结局预测**：三倾向（渡世/灭世/超脱）的占比 + 当前倾向。
+- `summary`：一句话总览。
+
+### 📤 导出（JSON / Markdown / HTML）
+
+`shared/export.ts` 把一份修行记录导出为三种格式：
+
+| 格式       | 用途                                             | 特点                                                       |
+| ---------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| **JSON**   | 二次处理 / 导入恢复 / 跨工具                     | 含 `format: dashan-ledger-v1` 标记 + 完整 stats 面板，可往返 parse |
+| **Markdown** | 人类可读的修行录                               | 概览 + 语气分布表 + 称号阶梯（✅/⬜）+ 明细表，竖线自动转义 |
+| **HTML**   | 离线打开 / 打印 / 分享                           | 自包含中国风卡片（内联 CSS，无外部依赖）+ `escapeHtml` 防注入 + 打印友好 |
+
+统一入口 `exportLedger(format, entries, meta)`，附 `exportFileExtension` / `exportMimeType`。
+
+### 🎨 主题切换（暗色 / 亮色 / 古风）
+
+`shared/theme.ts` 提供三套主题，各自定义一组同名 CSS 变量（通过 `<html data-theme="xxx">` 覆盖）：
+
+| 主题           | id       | 风格                           |
+| -------------- | -------- | ------------------------------ |
+| 🌙 **墨夜**    | `dark`   | 深底高对比（默认，现有中国风） |
+| ☀️ **晨光**    | `light`  | 浅底，长时间阅读护眼           |
+| 📜 **古风**    | `ancient`| 宣纸 + 朱红 + 灂金，最具氛围   |
+
+- `localStorage` 持久化（`dashan-theme` key），刷新后保留。
+- 核心逻辑（取主题 / 校验 / CSS 生成）与 DOM 副作用分离，**SSR 友好、可单测**。
+- 支持「跟随系统 `prefers-color-scheme`」推荐（`recommendedTheme`）。
+- `allThemesCSS()` 一次性生成全部三主题的 CSS 变量声明。
+
+---
+
+
 ## 三种运行形态
 
 | 形态                  | 命令             | 说明                                                                                                                    |
@@ -185,6 +249,11 @@ dashan/
 │   ├── card.ts          # 分享卡片（纯文本 ASCII + 自包含 HTML，无 DOM 依赖）
 │   ├── scriptSchema.ts  # 用户自定义剧本的校验 schema
 │   ├── persistence.ts   # localStorage 存档（跨会话保存善恶簿/对话进度/称号）
+│   ├── i18n.ts          # 多语言骨架（zh-CN/en-US）+ 英文 SYSTEM_PROMPT + 翻转论证 5 法 i18n key
+│   ├── customDilemma.ts # 自定义困境创建器（输入情境+选项→自动生成翻转夸赞）
+│   ├── stats.ts         # 统计面板数据（选项/语气/题材/时长/称号/结局 图表数据）
+│   ├── export.ts        # 导出（JSON / Markdown / HTML 三格式）
+│   ├── theme.ts         # 主题切换（暗色/亮色/古风 + localStorage + CSS 变量）
 │   ├── env.ts           # 零依赖 .env 加载
 │   └── retry.ts         # 指数退避重试
 ├── server/
@@ -202,7 +271,7 @@ dashan/
 │   └── style.css        # 中国风样式（朱红/墨黑/洒金、对联、印章、宣纸卷）
 ├── cli/
 │   └── index.ts         # CLI 版（善恶簿/时间线/分享卡片/多结局/--scripts 加载剧本）
-├── test/                # 245 个测试用例（详见 AGENTS.md 测试矩阵）
+├── test/                # 445 个测试用例（详见 AGENTS.md 测试矩阵）
 ├── index.html
 └── .env.example
 ```
@@ -247,7 +316,7 @@ npm run build        # 构建前端到 dist/
 npm run type-check   # TypeScript 类型检查
 npm run lint         # ESLint
 npm run format       # Prettier 格式化
-npm run test         # 运行单元测试（245 用例）
+npm run test         # 运行单元测试（445 用例）
 ```
 
 ---
