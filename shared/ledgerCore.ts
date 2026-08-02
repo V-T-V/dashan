@@ -153,7 +153,9 @@ export function progressToNextTitle(count: number): {
     current: level,
     nextAt,
     remaining: nextAt - count,
-    percent: Math.min(100, Math.round((done / span) * 100)),
+    // 下限 0：count < curAt（如开局 0 笔，尚未达本区间起点）时 done 为负，
+    // 进度应显示 0% 而非负数，避免 UI 出现负进度条。
+    percent: Math.max(0, Math.min(100, Math.round((done / span) * 100))),
   };
 }
 
