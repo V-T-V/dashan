@@ -178,12 +178,14 @@ test('custom: choices 的 id 为 A/B/C/D', () => {
   assert.deepEqual(ids, ['A', 'B', 'C', 'D']);
 });
 
-test('custom: 默认 category=人性、difficulty=1', () => {
+test('custom: 默认 category=人性、difficulty=1（ValidatedScript 不暴露，仅验证不抛错）', () => {
+  // ValidatedScript.situation 类型不含 category/difficulty（结构精简），
+  // createCustomDilemma 内部构造了完整 Situation 但通过 ValidatedScript 收口。
+  // 这里只验证生成成功、结构合法；category/difficulty 的默认值由 createCustomDilemma 内部保证。
   const r = createCustomDilemma(validInput());
-  assert.equal(r.script!.situation.category, undefined); // 注意：ValidatedScript.situation 不含 category（结构限制）
-  // category/difficulty 在 Situation 层，createCustomDilemma 内部构造了但 ValidatedScript 不暴露
-  // 这里改测：createCustomDilemma 不抛、返回 ok 即可
   assert.equal(r.ok, true);
+  assert.ok(r.script);
+  assert.equal(r.script!.situation.situation.length > 0, true);
 });
 
 test('custom: createCustomDilemma 非法输入返回 errors 不抛异常', () => {
