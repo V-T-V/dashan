@@ -22,8 +22,8 @@
 - **Web 前端**（src/）：9 模块——对话渲染、选项交互、打字机夸赞、Canvas 分享卡、脚本编辑器、账本、题材收藏、样式
 - **API server**（server/）：2 模块——`index.ts`（6 条 REST 路由）+ `store.ts`（进程内会话存储）
 - **CLI**（cli/）：独立入口，含善恶簿/修行时间线/分享卡片/多结局/`--scripts` 加载
-- **shared/ 17 模块**（见下表）——被三端复用，含本轮新增的 i18n / customDilemma / stats / export / theme 五大功能模块
-- **测试 20 个文件 / 445 个用例**（见下表）
+- **shared/ 21 模块**（见下表）——被三端复用，含 round 8 新增的 schools / music / quotes / daily 四大哲学内容模块
+- **测试 26 个文件 / 637 个用例**（见下表）
 
 ## shared/ 模块完成度
 
@@ -43,11 +43,15 @@
 | `customDilemma.ts`| 235  | 自定义困境创建器（输入情境+选项→确定性生成翻转夸赞）                    | ✅ 新增 |
 | `stats.ts`        | 280  | 统计面板数据（选项/语气/题材/时长/称号/结局 图表数据）                   | ✅ 新增 |
 | `export.ts`       | 310  | 导出（JSON / Markdown / HTML 三格式，自包含卡片）                       | ✅ 新增 |
-| `theme.ts`        | 215  | 主题切换（暗色/亮色/古风 + localStorage + CSS 变量，SSR 友好）          | ✅ 新增 |
+| `theme.ts`        | 215  | 主题切换（暗色/亮色/古风 + localStorage + CSS 变量，SSR 友好）          | ✅ 稳定 |
+| `schools.ts`      | 241  | 哲学流派系统（儒/道/佛/法/墨 5 流派翻转口吻 + affinity 推荐 + 对照对话）| ✅ 新增 |
+| `music.ts`        | 289  | 情境音乐推荐（按题材+语气+难度三轴评分 12 首曲库 + 推荐包）             | ✅ 新增 |
+| `quotes.ts`       | 231  | 哲学引语库（100+ 条古今中外名言，按困境题材×语气×难度匹配）             | ✅ 新增 |
+| `daily.ts`        | 250  | 每日哲思（日期种子→推荐困境+引语+流派+反思问题，同日稳定）             | ✅ 新增 |
 | `env.ts`          | 58   | 零依赖 .env 加载                                                         | ✅ 稳定 |
 | `retry.ts`        | 64   | 指数退避重试（搬自 agentresearch）                                       | ✅ 稳定 |
 
-**共计约 4080 行共享逻辑**（原 2777 + 新增 5 模块约 1300），零运行时依赖（全 devDeps）。
+**共计约 5090 行共享逻辑**（原 4080 + round 8 新增 4 模块约 1010），零运行时依赖（全 devDeps）。
 
 ## 困境内容库统计
 
@@ -59,9 +63,16 @@
 - **每个剧本**：情境描述 + 3 选项 + 每选项的诡辩式翻转夸赞（6 语气轮换：庄严/戏谑/佛系/学术/江湖/温情）+ 自由输入兜底夸赞
 - **辩证手法**：因果论 / 反伪善论 / 超越论 / 守恒论 / 破立论（5 种轮换）
 
+### 哲学内容库（round 8 新增）
+
+- **流派**：`shared/schools.ts` 5 流派（儒/道/佛/法/墨），每流派含 emoji/纲要/核心命题/经典清单/题材 affinity/默认语气。5 流派 affinity 合并覆盖全 8 题材，5 流派默认语气互不重复。
+- **音乐**：`shared/music.ts` 12 首曲库（古琴民乐 4 + 西方古典 4 + 氛围配乐 4），每首按 (题材, 语气, 难度) 三轴标注，合并覆盖全 8 题材 + 全 6 语气。
+- **引语**：`shared/quotes.ts` **100+ 条**古今中外哲学名言，按流派分布（儒家/道家/佛家/法家/墨家/西方 各有覆盖），每条按 (题材, 语气, 难度) 三轴标注，合并覆盖全 8 题材 + 全 6 语气。
+- **每日哲思**：`shared/daily.ts` 反思问题模板按 8 题材各预设 3 个反思维度（共 24 问），与困境题材自动匹配。
+
 ## 测试覆盖矩阵
 
-`npm test`（node --test + tsx），共 **445 用例 / 20 文件**，全绿。
+`npm test`（node --test + tsx），共 **637 用例 / 26 文件**，全绿。
 
 | 测试文件                       | 用例数 | 覆盖范围                                                 |
 | ------------------------------ | ------ | -------------------------------------------------------- |
@@ -86,10 +97,17 @@
 | `stats.test.ts`                | 28     | 选项分布/语气偏好/题材/难度/活跃时长/humanize/称号进度/结局/完整面板|
 | `export.test.ts`               | 28     | JSON往返/Markdown表格转义/HTML自包含防注入/统一入口/扩展名MIME|
 | `theme.test.ts`                | 27     | 注册表/校验/CSS变量一致性/save-load往返/mock DOM应用/setTheme集成|
+| `difficulty-advanced.test.ts`  | 21     | 等级解锁矩阵/递进序列跳变点/反转规则（缺省=1）/回退链/负数与超大数容错（深度）|
+| `history-advanced.test.ts`     | 24     | 乱序排序/promotionMilestones/搜索辅助/统计一致性/ts 透传/晋升边界（深度）|
+| `card-advanced.test.ts`        | 33     | HTML 结构(viewport/charset/lang/title)/转义防注入/响应式CSS/社交分享/确定性/色调块（深度）|
+| `schools.test.ts`              | 25     | 5 流派元信息/affinity 覆盖全题材/默认语气不重复/praise 确定性/对照对话/互补选 N|
+| `music.test.ts`                | 26     | 12 首曲库完整性/三轴评分/降序稳定/推荐包/库统计/全 8 题材 + 全 6 语气覆盖|
+| `quotes.test.ts`               | 28     | 100+ 条规模/6 流派覆盖/scoreQuote/降序稳定/按流派过滤/种子随机/renderQuote|
+| `daily.test.ts`                | 35     | 日期工具往返/dateSeed 稳定/同日确定/星期/反思问题/一年 365 天不抛错|
 
 **覆盖层级**：shared（纯逻辑，全覆盖）+ server（路由集成，黑盒）。**未覆盖**：前端 src 的 DOM 层（无自动化测试，靠手测）。
 
-**质量门禁**：`npm run type-check`（tsc --noEmit，零错误）+ `npm run lint`（eslint，零错误）+ `npm test`（245 绿）三件套全过才可提交。
+**质量门禁**：`npm run type-check`（tsc --noEmit，零错误）+ `npm run lint`（eslint，零错误）+ `npm test`（637 绿）三件套全过才可提交。
 
 ## 技术栈与架构
 
@@ -117,7 +135,7 @@ npm run dev          # concurrently 同时起 vite(web) + server
 npm run server       # 仅代理 server（6 条 REST API）
 npm run cli          # 仅 CLI
 npm run build        # vite build
-npm test             # 445 个测试（node --test + tsx）
+npm test             # 637 个测试（node --test + tsx）
 npm run type-check / lint / format
 ```
 
@@ -125,8 +143,8 @@ LLM 配置走 `.env`（shared/env.ts 读，shared/llm.ts 用），无 key 时 fa
 
 ## 关键约定
 
-- **shared/ 是三端共享逻辑的唯一源**——夸赞/账本/LLM/难度/历史/卡片/persistence/i18n/customDilemma/stats/export/theme 逻辑放 shared，不要在 src/server/cli 里重复实现。
-- 前端 src 的 DOM 层无自动化测试，shared + server 有测试（445 用例）——**改 shared 时务必跑 `npm test` + `type-check` + `lint`**。
+- **shared/ 是三端共享逻辑的唯一源**——夸赞/账本/LLM/难度/历史/卡片/persistence/i18n/customDilemma/stats/export/theme/schools/music/quotes/daily 逻辑放 shared，不要在 src/server/cli 里重复实现。
+- 前端 src 的 DOM 层无自动化测试，shared + server 有测试（637 用例）——**改 shared 时务必跑 `npm test` + `type-check` + `lint`**。
 - 零运行时依赖是特点：不引入 express 等框架，server 用原生 http 实现。
 - fallback 剧本要与 LLM 输出格式严格一致（含 difficulty/category 字段），否则离线/在线体验割裂。
 - `difficulty.ts` 的 `deedCountToLevel` 与 `ledgerCore.titleLevel` 行为等价但**故意独立实现**（避免 fallback ↔ ledgerCore 循环依赖），改阈值时两处要同步。
@@ -134,16 +152,19 @@ LLM 配置走 `.env`（shared/env.ts 读，shared/llm.ts 用），无 key 时 fa
 - **i18n 设计**：`tone`/`category` 枚举值始终用中文（类型契约），仅展示层经 `i18n.toneLabel/categoryLabel` 翻译；英文 SYSTEM_PROMPT 也要求 LLM 输出中文枚举，避免破坏前端解析。
 - **customDilemma 确定性**：同输入同输出（`hashString` 映射稳定），便于测试与回放；生成结果结构兼容 `scriptSchema`，可直接注入 fallback pool。
 - **theme SSR 友好**：核心逻辑（取主题/CSS 生成）与 DOM 副作用分离，无 `window`/`document` 时不崩。
+- **round 8 正交设计**：`customDilemma.ts` 的 5 种「翻转手法」（怎么翻）与 `schools.ts` 的 5 流派（用什么话翻）正交，可组合 5×5=25 种风格；`quotes.ts` 是金句弹药，`daily.ts` 是日期种子驱动的整合入口。
 
 ## 下一步（Next Steps）
 
-- [ ] **前端接线**：把 i18n/customDilemma/stats/export/theme 五大模块接入 src/ 的 DOM 层（语言切换 UI、自定义困境编辑器、统计面板页、导出按钮、主题切换器）。
+- [ ] **前端接线**：把 i18n/customDilemma/stats/export/theme/schools/music/quotes/daily 九大模块接入 src/ 的 DOM 层（语言切换、自定义困境编辑器、统计面板、导出按钮、主题切换器、流派选择器、BGM 推荐条、引语弹窗、每日哲思首页卡片）。
+- [ ] **流派×手法组合**：把 schools 与 customDilemma 的 5 手法做笛卡尔积（25 风格变体），让用户「选流派 + 选手法」定制夸赞风格。
+- [ ] **每日哲思推送**：把 daily.ts 接入 server 的 `/api/daily` 路由 + 前端首页「今日一题」入口，支持 PWA 推送。
+- [ ] **音乐真实对接**：music.ts 当前是数据推荐，可对接网易云/QQ音乐 API 实现真实播放（需 server 代理）。
+- [ ] **引语库扩充**：当前 100+ 条，可扩充至 300+，并补全 8 题材 × 6 语气 × 3 难度的完整矩阵。
 - [ ] **英文困境库扩充**：当前 i18n 仅含 1 个英文示例剧本，可补全 16 个内置剧本的英文版，实现真正双语离线。
-- [ ] **LLM 生成英文**：让英文 locale 下走 `SYSTEM_PROMPT_EN`，并把 `buildMessages` 接入 locale 参数。
 - [ ] **自定义困境接入 LLM**：`customDilemma.ts` 当前是离线模板生成，可加一个「LLM 增强模式」让真实模型润色夸赞。
 - [ ] **统计面板可视化**：前端用 Canvas/SVG 把 stats 数据画成饼图/柱图/进度条。
 - [ ] **导出分享**：HTML 导出可直接生成可分享链接（data URI 编码）。
-- [ ] **主题预览**：切换主题时实时预览（已有 CSS 变量基础）。
 - [ ] **前端 DOM 测试**：当前 src/ 无自动化测试，可引入 happy-dom/jsdom 补齐。
 
 ## 与其他项目的关系
