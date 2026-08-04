@@ -277,7 +277,8 @@ test('custom: 生成的剧本可注入 fallback pool 并被匹配', async () => 
   const r = createCustomDilemma(validInput({ choices: ['唯一选项A', '唯一选项B'] }));
   clearUserScripts();
   loadUserScripts([r.script!] as never[]);
-  const sit = pickFallbackFirstSituation();
+  const _sit = pickFallbackFirstSituation();
+  void _sit;
   // 选「唯一选项A」应匹配到生成的夸赞
   const turn = pickFallbackTurn('唯一选项A');
   assert.ok(turn.praise.length > 0);

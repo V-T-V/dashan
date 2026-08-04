@@ -213,7 +213,8 @@ test('deep: pickFallbackTurn 返回的 next 是深拷贝', () => {
   const firstSit = pickFallbackFirstSituation();
   const turn = pickFallbackTurn(firstSit.choices[0]!.text);
   const origNextText = turn.next.situation;
-  const origChoiceCount = turn.next.choices.length;
+  const _origChoiceCount = turn.next.choices.length;
+  void _origChoiceCount;
   turn.next.situation = '篡改';
   turn.next.choices.push({ id: 'Z', text: '注入' } as never);
   // 推进游标回到同一剧本（靠多次推进），验证未被污染

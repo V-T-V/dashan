@@ -195,6 +195,88 @@ export function endingType(entries: readonly LedgerEntry[]): EndingType {
   return '超脱';
 }
 
+/**
+ * 取当前占比最高的语气（主导语气）。
+ * 用于让 LLM 呼应玩家的「风格」（注入 PlayerContext.dominantTone）。
+ *
+ * 平局决胜：按 ALL_TONES 声明顺序（庄严→戏谑→佛系→学术→江湖→温情）取先者，
+ * 保证结果是确定性的（同输入同输出），便于测试与回放。
+ * @param entries 善恶簿记录
+ * @returns 占比最高的语气；无记录时返回 null
+ */
+export function dominantTone(entries: readonly LedgerEntry[]): Tone | null {
+  if (entries.length === 0) return null;
+  const stats = toneStats(entries);
+  // 按 ALL_TONES 顺序遍历，确保平局时取声明顺序在前者（确定性）
+  const order: Tone[] = ['庄严', '戏谑', '佛系', '学术', '江湖', '温情'];
+  let best: Tone | null = null;
+  let bestCount = -1;
+  for (const t of order) {
+    const c = stats[t] ?? 0;
+    if (c > bestCount) {
+      bestCount = c;
+      best = t;
+    }
+  }
+  return best;
+}
+
+/**
+ * 生成结局的丰富叙述文案（多行，含称号、主导语气、结局类型与哲学评语）。
+ *
+ * 三结局各自的评语：
+ *  - 渡世：慈悲为怀，以众生之苦为己苦
+ *  - 灭世：杀伐果断，以非常之恶行非常之善
+ *  - 超脱：超越善恶二元，俯瞰人间
+ *
+ * 隐藏结局（彩蛋）：当玩家达到最高称号（isMaxTitle）且主导语气为「学术」时，
+ * 触发「辩经尊者」——以纯然理性超脱一切道德判断，是讽刺的极致。
+ *
+ * @param entries 善恶簿记录
+ * @param count   当前记录数（可与 entries.length 不同，便于从存档恢复时传入）
+ * @returns 含 type/title/tone/narrative 四字段的结局描述对象
+ */
+export interface EndingNarrative {
+  /** 结局类型（含隐藏结局「辩经尊者」）。 */
+  type: EndingType | '辩经尊者';
+  /** 当前善名称号。 */
+  title: string;
+  /** 主导语气（无记录时为 null）。 */
+  tone: Tone | null;
+  /** 多行叙述文案（用 \n 分隔）。 */
+  narrative: string;
+}
+
+export function endingNarrative(
+  entries: readonly LedgerEntry[],
+  count: number = entries.length,
+): EndingNarrative {
+  const title = TITLES[titleLevel(count)]?.name ?? TITLES[0]!.name;
+  const tone = dominantTone(entries);
+  const baseType = endingType(entries);
+
+  // 隐藏结局：满级 + 主导学术 → 辩经尊者
+  const isHidden = isMaxTitle(count) && tone === '学术';
+  const type: EndingNarrative['type'] = isHidden ? '辩经尊者' : baseType;
+
+  const epilogues: Record<EndingNarrative['type'], string> = {
+    渡世: '你以慈悲为秤，称量众生之苦为己苦。世人或讥你伪善，殊不知这伪善若是装了一生，便与真善无异。大善者，渡人亦渡己。',
+    灭世: '你以杀伐为笔，书写非常之恶以成非常之善。凡夫见你手染鲜血，不见你背负的因果。能造大恶者，方有大善之能；这便是大善系统的终极讽喻。',
+    超脱: '你超越了善恶的二元樊笼，俯瞰人间纷扰。不渡不灭，不立不破——这不是冷漠，而是看穿了所有的「善」都不过是另一种「恶」的注脚。',
+    辩经尊者: '你以纯然的理性，将一切道德判断解构为语法游戏。善与恶在你口中不过是可任意翻转的命题——这是大善系统的究极形态：连「大善」本身，都被你论证成了多余的执念。',
+  };
+
+  const lines = [
+    `【结局 · ${type}】`,
+    `当前境界：${title}`,
+    tone ? `主导语气：${tone}` : '主导语气：未显（白纸一张）',
+    '',
+    epilogues[type]!,
+  ];
+
+  return { type, title, tone, narrative: lines.join('\n') };
+}
+
 /** 转义 HTML 特殊字符，防止记录文本（用户自由输入）破坏 DOM / 注入。 */
 export function escapeHtml(s: string): string {
   return s

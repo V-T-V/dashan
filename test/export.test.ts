@@ -20,7 +20,7 @@ import {
   exportMimeType,
   type ExportEntry,
 } from '../shared/export.ts';
-import type { Tone, Category, Difficulty } from '../shared/types.ts';
+import type { Tone } from '../shared/types.ts';
 
 function mk(
   i: number,
