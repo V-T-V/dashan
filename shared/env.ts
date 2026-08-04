@@ -33,6 +33,32 @@ function parseLine(line: string): [string, string] | null {
   return [key, value];
 }
 
+/**
+ * 解析整段 .env 文本为 { key: value } 字典。
+ *
+ * 纯函数（不碰 process.env、不读文件），便于测试与 SSR。
+ * 行为：
+ *  - 空行与 `#` 开头的注释行跳过
+ *  - 无 `=` 或 `=value`（缺 key）的行静默跳过（容错）
+ *  - 后出现的同名 key 覆盖前者（与 shell 行为一致）
+ *  - 成对的双引号/单引号被剥离；不成对则原样保留
+ *
+ * @param raw .env 文件原始文本
+ * @returns 解析出的键值字典（空文本/全非法行 → 空对象）
+ */
+export function parseEnvText(raw: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of raw.split(/\r?\n/)) {
+    const parsed = parseLine(line);
+    if (!parsed) continue;
+    const [key, value] = parsed;
+    // 跳过空 key（parseLine 已保证，但双重防御）
+    if (!key) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
 /** 从 cwd 向上查找并加载 .env，仅注入未设置的变量（不覆盖已有） */
 export function loadEnv(cwd: string = process.cwd()): void {
   if (loaded) return;
@@ -42,10 +68,8 @@ export function loadEnv(cwd: string = process.cwd()): void {
   if (!existsSync(envPath)) return;
 
   const raw = readFileSync(envPath, 'utf8');
-  for (const line of raw.split(/\r?\n/)) {
-    const parsed = parseLine(line);
-    if (!parsed) continue;
-    const [key, value] = parsed;
+  const parsed = parseEnvText(raw);
+  for (const [key, value] of Object.entries(parsed)) {
     if (process.env[key] === undefined) {
       process.env[key] = value;
     }
