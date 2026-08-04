@@ -22,8 +22,8 @@
 - **Web 前端**（src/）：9 模块——对话渲染、选项交互、打字机夸赞、Canvas 分享卡、脚本编辑器、账本、题材收藏、样式
 - **API server**（server/）：2 模块——`index.ts`（6 条 REST 路由）+ `store.ts`（进程内会话存储）
 - **CLI**（cli/）：独立入口，含善恶簿/修行时间线/分享卡片/多结局/`--scripts` 加载
-- **shared/ 21 模块**（见下表）——被三端复用，含 round 8 新增的 schools / music / quotes / daily 四大哲学内容模块
-- **测试 26 个文件 / 637 个用例**（见下表）
+- **shared/ 22 模块**（见下表）——被三端复用，含 round 8 新增的 schools / music / quotes / daily 四大哲学内容模块，及 deep 轮新增的 dominantTone / endingNarrative（隐藏结局）/ practiceStage（修行阶段）/ parseEnvText（env 解析加固）
+- **测试 35 个文件 / 831 个用例**（见下表）
 
 ## shared/ 模块完成度
 
@@ -33,7 +33,7 @@
 | `prompt.ts`       | 149  | 【灵魂】system prompt + JSON 输出约束 + 境界摘要 + 难度引导注入          | ✅ 稳定 |
 | `llm.ts`          | 296  | LLM 客户端 + JSON 解析校验 + 离线回退工厂（透传 deedCount 给 pickers）   | ✅ 稳定 |
 | `fallback.ts`     | 843  | **16 个预设剧本**（含 difficulty 标注）+ 每选项夸赞映射 + 游标推进       | ✅ 稳定 |
-| `ledgerCore.ts`   | 203  | 善恶簿纯逻辑：记录/8 级称号阶梯/印章/语气统计/结局推导                   | ✅ 稳定 |
+| `ledgerCore.ts`   | 305  | 善恶簿纯逻辑：记录/8 级称号阶梯/印章/语气统计/结局推导/dominantTone/endingNarrative（含隐藏结局辩经尊者） | ✅ 稳定 |
 | `difficulty.ts`   | 100  | 难度递进系统：境界→解锁上限，fallback/prompt 共用                        | ✅ 稳定 |
 | `history.ts`      | 278  | 修行时间线：把账本编排成带晋升标记的故事 + 文本/ANSI 渲染                | ✅ 稳定 |
 | `card.ts`         | 442  | 分享卡片：纯文本 ASCII + 自包含 HTML（无 DOM 依赖）                      | ✅ 稳定 |
@@ -41,17 +41,17 @@
 | `persistence.ts`  | 93   | localStorage 存档（跨会话保存善恶簿/对话进度/称号）                      | ✅ 稳定 |
 | `i18n.ts`         | 260  | 多语言骨架（zh-CN/en-US）+ 英文 SYSTEM_PROMPT + 翻转论证 5 法 i18n key   | ✅ 新增 |
 | `customDilemma.ts`| 235  | 自定义困境创建器（输入情境+选项→确定性生成翻转夸赞）                    | ✅ 新增 |
-| `stats.ts`        | 280  | 统计面板数据（选项/语气/题材/时长/称号/结局 图表数据）                   | ✅ 新增 |
+| `stats.ts`        | 400  | 统计面板数据（选项/语气/题材/时长/称号/结局 图表数据）+ practiceStage 修行阶段分类器（5 阶段正交叙事轴） | ✅ 新增 |
 | `export.ts`       | 310  | 导出（JSON / Markdown / HTML 三格式，自包含卡片）                       | ✅ 新增 |
 | `theme.ts`        | 215  | 主题切换（暗色/亮色/古风 + localStorage + CSS 变量，SSR 友好）          | ✅ 稳定 |
 | `schools.ts`      | 241  | 哲学流派系统（儒/道/佛/法/墨 5 流派翻转口吻 + affinity 推荐 + 对照对话）| ✅ 新增 |
 | `music.ts`        | 289  | 情境音乐推荐（按题材+语气+难度三轴评分 12 首曲库 + 推荐包）             | ✅ 新增 |
 | `quotes.ts`       | 231  | 哲学引语库（100+ 条古今中外名言，按困境题材×语气×难度匹配）             | ✅ 新增 |
 | `daily.ts`        | 250  | 每日哲思（日期种子→推荐困境+引语+流派+反思问题，同日稳定）             | ✅ 新增 |
-| `env.ts`          | 58   | 零依赖 .env 加载                                                         | ✅ 稳定 |
+| `env.ts`          | 80   | 零依赖 .env 加载（parseEnvText 公开纯函数 + 容错解析）                   | ✅ 稳定 |
 | `retry.ts`        | 64   | 指数退避重试（搬自 agentresearch）                                       | ✅ 稳定 |
 
-**共计约 5090 行共享逻辑**（原 4080 + round 8 新增 4 模块约 1010），零运行时依赖（全 devDeps）。
+**共计约 5380 行共享逻辑**（原 5090 + deep 轮新增 dominantTone/endingNarrative/practiceStage/parseEnvText 约 290），零运行时依赖（全 devDeps）。
 
 ## 困境内容库统计
 
@@ -72,7 +72,7 @@
 
 ## 测试覆盖矩阵
 
-`npm test`（node --test + tsx），共 **637 用例 / 26 文件**，全绿。
+`npm test`（node --test + tsx），共 **831 用例 / 35 文件**，全绿。
 
 | 测试文件                       | 用例数 | 覆盖范围                                                 |
 | ------------------------------ | ------ | -------------------------------------------------------- |
@@ -104,10 +104,17 @@
 | `music.test.ts`                | 26     | 12 首曲库完整性/三轴评分/降序稳定/推荐包/库统计/全 8 题材 + 全 6 语气覆盖|
 | `quotes.test.ts`               | 28     | 100+ 条规模/6 流派覆盖/scoreQuote/降序稳定/按流派过滤/种子随机/renderQuote|
 | `daily.test.ts`                | 35     | 日期工具往返/dateSeed 稳定/同日确定/星期/反思问题/一年 365 天不抛错|
+| `ending-deep.test.ts`          | 30     | endingType 三结局触发条件/平局归超脱(strict>决胜)/单条/大样本稳定/数学不变量（深度）|
+| `difficulty-consistency-deep.test.ts` | 27 | difficulty↔ledgerCore 双实现全区间一致性/跳变点/DIFFICULTY_META完备/filterByLevel边界/recommendDifficulty回退链（深度）|
+| `script-schema-pollution-deep.test.ts` | 30 | 顶层非对象/类型污染(数组当对象)/choice非对象/text数字/praises多余key容忍/validateUserScripts非数组/100批量序号（深度）|
+| `fallback-content-deep.test.ts`| 26     | 难度分布4/8/4/8题材全覆盖/6语气完备/选项数2-4/文案非空最小长度/picker空串超长特殊字符不崩/游标回绕（深度）|
+| `ledger-narrative-deep.test.ts`| 25     | dominantTone平局确定性/endingNarrative三结局叙述/隐藏结局辩经尊者(满级+学术)/count参数独立性（深度）|
+| `stats-practice-stage.test.ts` | 28     | practiceStage 5阶段触发阈值/封顶/进度数学/与TITLES正交性/负数超大数容错/确定性|
+| `env-deep.test.ts`             | 28     | parseEnvText 解析容错(无=/缺key/未闭合引号/值内#)/CRLF混合/同名覆盖/纯函数不污染process.env|
 
 **覆盖层级**：shared（纯逻辑，全覆盖）+ server（路由集成，黑盒）。**未覆盖**：前端 src 的 DOM 层（无自动化测试，靠手测）。
 
-**质量门禁**：`npm run type-check`（tsc --noEmit，零错误）+ `npm run lint`（eslint，零错误）+ `npm test`（637 绿）三件套全过才可提交。
+**质量门禁**：`npm run type-check`（tsc --noEmit，零错误）+ `npm run lint`（eslint，零错误）+ `npm test`（831 绿）三件套全过才可提交。
 
 ## 技术栈与架构
 
@@ -122,8 +129,8 @@ dashan/
 │               praise.ts, share.ts, favorites.ts, style.css   (Web 前端)
 ├── server/     index.ts(6 路由), store.ts(会话存储)            (API server)
 ├── cli/        index.ts                                       (CLI 入口)
-├── shared/     17 模块（见上表，约 4080 行）
-├── test/       20 文件 / 445 用例
+├── shared/     22 模块（见上表，约 5380 行）
+├── test/       35 文件 / 831 用例
 └── dist/       已构建 web 产物
 ```
 
@@ -135,7 +142,7 @@ npm run dev          # concurrently 同时起 vite(web) + server
 npm run server       # 仅代理 server（6 条 REST API）
 npm run cli          # 仅 CLI
 npm run build        # vite build
-npm test             # 637 个测试（node --test + tsx）
+npm test             # 831 个测试（node --test + tsx）
 npm run type-check / lint / format
 ```
 
@@ -153,10 +160,13 @@ LLM 配置走 `.env`（shared/env.ts 读，shared/llm.ts 用），无 key 时 fa
 - **customDilemma 确定性**：同输入同输出（`hashString` 映射稳定），便于测试与回放；生成结果结构兼容 `scriptSchema`，可直接注入 fallback pool。
 - **theme SSR 友好**：核心逻辑（取主题/CSS 生成）与 DOM 副作用分离，无 `window`/`document` 时不崩。
 - **round 8 正交设计**：`customDilemma.ts` 的 5 种「翻转手法」（怎么翻）与 `schools.ts` 的 5 流派（用什么话翻）正交，可组合 5×5=25 种风格；`quotes.ts` 是金句弹药，`daily.ts` 是日期种子驱动的整合入口。
+- **deep 轮新增叙事轴**：`ledgerCore.dominantTone` 是计算主导语气的唯一共享纯函数（平局按声明顺序确定性决胜，前端 src/ledger.ts 的内联实现应迁移至此）；`ledgerCore.endingNarrative` 在三结局外新增隐藏结局「辩经尊者」（满级 + 主导学术触发，讽刺的极致）；`stats.practiceStage` 是与称号系统正交的另一条叙事轴（5 阶段：初涉红尘/问道之人/行者无疆/洞明世事/超然物外，阈值 0/3/6/10/15，比称号满级 10 笔走得更远，是「后称号时代」的成长）。
+- **env 解析加固**：`env.parseEnvText` 是从 `loadEnv` 抽出的公开纯函数（不碰 process.env、不读文件，SSR 友好且可测），`loadEnv` 复用之消除重复；容错策略：无 `=`/缺 key 的行静默跳过，`KEY=` 得空串（shell 语义），未闭合引号原样保留。
 
 ## 下一步（Next Steps）
 
 - [ ] **前端接线**：把 i18n/customDilemma/stats/export/theme/schools/music/quotes/daily 九大模块接入 src/ 的 DOM 层（语言切换、自定义困境编辑器、统计面板、导出按钮、主题切换器、流派选择器、BGM 推荐条、引语弹窗、每日哲思首页卡片）。
+- [ ] **新功能接线**：deep 轮新增的 `dominantTone`（迁移 src/ledger.ts 内联实现）、`endingNarrative`（隐藏结局辩经尊者展示）、`practiceStage`（修行阶段进度条）需接入 src/ 与 cli/。
 - [ ] **流派×手法组合**：把 schools 与 customDilemma 的 5 手法做笛卡尔积（25 风格变体），让用户「选流派 + 选手法」定制夸赞风格。
 - [ ] **每日哲思推送**：把 daily.ts 接入 server 的 `/api/daily` 路由 + 前端首页「今日一题」入口，支持 PWA 推送。
 - [ ] **音乐真实对接**：music.ts 当前是数据推荐，可对接网易云/QQ音乐 API 实现真实播放（需 server 代理）。
