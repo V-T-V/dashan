@@ -296,3 +296,93 @@ export function buildStatsPanel(
     summary,
   };
 }
+
+// ── 修行阶段（practiceStage）─────────────────────────────
+// 与称号系统正交的另一条叙事轴：称号是「讽刺性善名」，修行阶段是「真诚的成长历程」。
+// 把 deedCount 映射到 5 个阶段，每阶段含描述与鼓励语，供前端首页/侧栏展示。
+
+/** 修行阶段定义。 */
+export interface PracticeStage {
+  /** 阶段 id（稳定标识，便于 i18n/前端引用）。 */
+  id: 'novice' | 'seeker' | 'adept' | 'sage' | 'transcendent';
+  /** 阶段中文名。 */
+  name: string;
+  /** 进入该阶段所需的最小 deed 数。 */
+  at: number;
+  /** 一句描述。 */
+  desc: string;
+  /** 鼓励语（给玩家的正向反馈，区别于讽刺性夸赞）。 */
+  encouragement: string;
+}
+
+/** 5 个修行阶段（阈值与 TITLES 解耦，独立设计）。 */
+export const PRACTICE_STAGES: readonly PracticeStage[] = [
+  {
+    id: 'novice',
+    name: '初涉红尘',
+    at: 0,
+    desc: '你刚踏入这善恶交织的人间，每一步都是新鲜的试探。',
+    encouragement: '莫急，每一次抉择都是修行的开始。',
+  },
+  {
+    id: 'seeker',
+    name: '问道之人',
+    at: 3,
+    desc: '你已数次面对困境，开始察觉「善」与「恶」并非泾渭分明。',
+    encouragement: '能看见灰度，便是智慧的萌芽。',
+  },
+  {
+    id: 'adept',
+    name: '行者无疆',
+    at: 6,
+    desc: '你已在道德的刀尖上走过数回，行事渐有定见，亦渐知代价。',
+    encouragement: '知代价而行，方为真勇。',
+  },
+  {
+    id: 'sage',
+    name: '洞明世事',
+    at: 10,
+    desc: '满级善名之下，你看透了所有选项的虚妄，仍愿认真抉择。',
+    encouragement: '看破而不说破，是最大的慈悲。',
+  },
+  {
+    id: 'transcendent',
+    name: '超然物外',
+    at: 15,
+    desc: '你已不再被任何困境动摇——不是麻木，而是与善恶和解。',
+    encouragement: '万物皆渡，何妨一笑。',
+  },
+];
+
+/** 修行阶段判定结果。 */
+export interface PracticeStageResult {
+  /** 当前阶段（若无记录取 novice）。 */
+  stage: PracticeStage;
+  /** 下一阶段（封顶后为 null）。 */
+  next: PracticeStage | null;
+  /** 距下一阶段还差几笔（封顶后 0）。 */
+  remaining: number;
+  /** 当前阶段进度百分比 0-100。 */
+  percent: number;
+}
+
+/**
+ * 根据当前 deed 数判定修行阶段。
+ * @param deedCount 当前已行 deeds 数
+ */
+export function practiceStage(deedCount: number): PracticeStageResult {
+  let idx = 0;
+  for (let i = 0; i < PRACTICE_STAGES.length; i++) {
+    if (deedCount >= PRACTICE_STAGES[i]!.at) idx = i;
+  }
+  const stage = PRACTICE_STAGES[idx]!;
+  const next = idx < PRACTICE_STAGES.length - 1 ? PRACTICE_STAGES[idx + 1]! : null;
+  if (next === null) {
+    return { stage, next: null, remaining: 0, percent: 100 };
+  }
+  const span = next.at - stage.at;
+  const done = deedCount - stage.at;
+  const remaining = next.at - deedCount;
+  const percent = Math.max(0, Math.min(100, span > 0 ? Math.round((done / span) * 100) : 100));
+  return { stage, next, remaining, percent };
+}
