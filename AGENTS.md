@@ -22,8 +22,8 @@
 - **Web 前端**（src/）：9 模块——对话渲染、选项交互、打字机夸赞、Canvas 分享卡、脚本编辑器、账本、题材收藏、样式
 - **API server**（server/）：2 模块——`index.ts`（6 条 REST 路由）+ `store.ts`（进程内会话存储）
 - **CLI**（cli/）：独立入口，含善恶簿/修行时间线/分享卡片/多结局/`--scripts` 加载
-- **shared/ 22 模块**（见下表）——被三端复用，含 round 8 新增的 schools / music / quotes / daily 四大哲学内容模块，及 deep 轮新增的 dominantTone / endingNarrative（隐藏结局）/ practiceStage（修行阶段）/ parseEnvText（env 解析加固）
-- **测试 35 个文件 / 831 个用例**（见下表）
+- **shared/ 23 模块**（见下表）——被三端复用，含 round 8 新增的 schools / music / quotes / daily 四大哲学内容模块，deep 轮新增的 dominantTone / endingNarrative（隐藏结局）/ practiceStage（修行阶段）/ parseEnvText（env 解析加固），及 R5 轮新增的 achievements（修行成就徽章系统）
+- **测试 43 个文件 / 1161 个用例**（见下表）
 
 ## shared/ 模块完成度
 
@@ -36,12 +36,12 @@
 | `ledgerCore.ts`   | 305  | 善恶簿纯逻辑：记录/8 级称号阶梯/印章/语气统计/结局推导/dominantTone/endingNarrative（含隐藏结局辩经尊者） | ✅ 稳定 |
 | `difficulty.ts`   | 100  | 难度递进系统：境界→解锁上限，fallback/prompt 共用                        | ✅ 稳定 |
 | `history.ts`      | 278  | 修行时间线：把账本编排成带晋升标记的故事 + 文本/ANSI 渲染                | ✅ 稳定 |
-| `card.ts`         | 442  | 分享卡片：纯文本 ASCII + 自包含 HTML（无 DOM 依赖）                      | ✅ 稳定 |
+| `card.ts`         | 485  | 分享卡片：纯文本 ASCII + 自包含 HTML（无 DOM 依赖）+ badges 徽章行集成 achievements | ✅ 稳定 |
 | `scriptSchema.ts` | 140  | 用户自定义剧本的校验 schema（收集所有错误）                              | ✅ 稳定 |
 | `persistence.ts`  | 93   | localStorage 存档（跨会话保存善恶簿/对话进度/称号）                      | ✅ 稳定 |
 | `i18n.ts`         | 260  | 多语言骨架（zh-CN/en-US）+ 英文 SYSTEM_PROMPT + 翻转论证 5 法 i18n key   | ✅ 新增 |
 | `customDilemma.ts`| 235  | 自定义困境创建器（输入情境+选项→确定性生成翻转夸赞）                    | ✅ 新增 |
-| `stats.ts`        | 400  | 统计面板数据（选项/语气/题材/时长/称号/结局 图表数据）+ practiceStage 修行阶段分类器（5 阶段正交叙事轴） | ✅ 新增 |
+| `stats.ts`        | 388  | 统计面板数据（选项/语气/题材/时长/称号/结局 图表数据）+ practiceStage 修行阶段分类器（5 阶段正交叙事轴） | ✅ 新增 |
 | `export.ts`       | 310  | 导出（JSON / Markdown / HTML 三格式，自包含卡片）                       | ✅ 新增 |
 | `theme.ts`        | 215  | 主题切换（暗色/亮色/古风 + localStorage + CSS 变量，SSR 友好）          | ✅ 稳定 |
 | `schools.ts`      | 241  | 哲学流派系统（儒/道/佛/法/墨 5 流派翻转口吻 + affinity 推荐 + 对照对话）| ✅ 新增 |
@@ -50,8 +50,9 @@
 | `daily.ts`        | 250  | 每日哲思（日期种子→推荐困境+引语+流派+反思问题，同日稳定）             | ✅ 新增 |
 | `env.ts`          | 80   | 零依赖 .env 加载（parseEnvText 公开纯函数 + 容错解析）                   | ✅ 稳定 |
 | `retry.ts`        | 64   | 指数退避重试（搬自 agentresearch）                                       | ✅ 稳定 |
+| `achievements.ts` | 217  | 修行成就徽章系统（11 枚/5 分类：累积·多样·连续·主导·里程碑，从 LedgerEntry[] 派生）| ✅ 新增 |
 
-**共计约 5380 行共享逻辑**（原 5090 + deep 轮新增 dominantTone/endingNarrative/practiceStage/parseEnvText 约 290），零运行时依赖（全 devDeps）。
+**共计约 5770 行共享逻辑**（原 5380 + R5 轮新增 achievements 徽章系统 217 行 + card.ts 徽章集成增量），零运行时依赖（全 devDeps），全仓 `tsc --noEmit` 0 错误。
 
 ## 困境内容库统计
 
@@ -72,7 +73,7 @@
 
 ## 测试覆盖矩阵
 
-`npm test`（node --test + tsx），共 **831 用例 / 35 文件**，全绿。
+`npm test`（node --test + tsx），共 **1161 用例 / 43 文件**，全绿。
 
 | 测试文件                       | 用例数 | 覆盖范围                                                 |
 | ------------------------------ | ------ | -------------------------------------------------------- |
@@ -111,10 +112,18 @@
 | `ledger-narrative-deep.test.ts`| 25     | dominantTone平局确定性/endingNarrative三结局叙述/隐藏结局辩经尊者(满级+学术)/count参数独立性（深度）|
 | `stats-practice-stage.test.ts` | 28     | practiceStage 5阶段触发阈值/封顶/进度数学/与TITLES正交性/负数超大数容错/确定性|
 | `env-deep.test.ts`             | 28     | parseEnvText 解析容错(无=/缺key/未闭合引号/值内#)/CRLF混合/同名覆盖/纯函数不污染process.env|
+| `retry-deep.test.ts`           | 20     | attempt 索引语义/retries=0 只 1 次/业务错误 400 不重试/末次优先抛/backoff 指数项与抖动范围/falsy 返回值不重试/无状态泄漏（深度）|
+| `stats-invariants-deep.test.ts`| 55     | choiceDistribution counts/percentages 一致/sum≈1/inferChoiceId 全模式/tonePreference 平局声明顺序/categoryDistribution 未知不计/humanizeDuration 单位边界/activeTimeStats 非法 ts 过滤/titleProgress 单调/endingForecast 三项和≈1/buildStatsPanel 纯函数（深度）|
+| `favorites-deep.test.ts`       | 38     | localStorage 异常吞错/JSON 畸形全分支(对象/数字/null/bool)/addFavorite 去重(同文本不同 category/空白不 trim/大小写敏感)/removeFavorite 首中尾删/filterByCategory 拷贝不被修改/countByCategory 总和=length/持久化往返（深度）|
+| `timeline-invariants-deep.test.ts` | 38 | buildTimeline 节点与 ledgerCore 强一致/晋升严格升序不变量/promotionMilestones index 递增/clip 按码点截断中文/renderTimelineAnsi 颜色不变量/TIMELINE_ANSI 常量完备/exportTimelineCompact JSON 往返/纯函数不修改输入（深度）|
+| `schools-classifier-deep.test.ts` | 51 | SCHOOLS 数据完备性/affinity 覆盖全 8 题材/recommendSchoolForCategory 确定性+平票声明顺序/toSchoolId 全分支/generateSchoolPraise seed 轮换/pickComplementarySchools 贪心覆盖单调/schoolDialogue seed0+1/schoolList 同引用（深度）|
+| `achievements.test.ts`         | 52     | longestToneStreak/toneCounts/distinctTones/dominantToneCount 边界/evaluateAchievements 结构与五分类/累积·多样·连续·主导·里程碑 阈值精确/unlockedAchievements/achievementSummary 派生一致/纯函数确定性|
+| `card-badges.test.ts`          | 23     | badgesLine 全分支/文本与 HTML 卡片徽章行插入与行序/转义防注入/textCardFromEntries 自动派生徽章/向后兼容/确定性|
+| `llm-error-paths-deep.test.ts` | 53     | parseJsonResponse 围栏/大括号截取/错误信息截断 120/normalizeResponse 全错误分支(situation/turn 缺字段·tone 回退·choices 边界·id 回退 A-D·category 丢弃)/未知 type/LlmHttpError status/message（深度）|
 
 **覆盖层级**：shared（纯逻辑，全覆盖）+ server（路由集成，黑盒）。**未覆盖**：前端 src 的 DOM 层（无自动化测试，靠手测）。
 
-**质量门禁**：`npm run type-check`（tsc --noEmit，零错误）+ `npm run lint`（eslint，零错误）+ `npm test`（831 绿）三件套全过才可提交。
+**质量门禁**：`npm run type-check`（tsc --noEmit，零错误）+ `npm run lint`（eslint，零错误）+ `npm test`（1161 绿）三件套全过才可提交。
 
 ## 技术栈与架构
 
@@ -129,8 +138,8 @@ dashan/
 │               praise.ts, share.ts, favorites.ts, style.css   (Web 前端)
 ├── server/     index.ts(6 路由), store.ts(会话存储)            (API server)
 ├── cli/        index.ts                                       (CLI 入口)
-├── shared/     22 模块（见上表，约 5380 行）
-├── test/       35 文件 / 831 用例
+├── shared/     23 模块（见上表，约 5770 行）
+├── test/       43 文件 / 1161 用例
 └── dist/       已构建 web 产物
 ```
 
@@ -142,7 +151,7 @@ npm run dev          # concurrently 同时起 vite(web) + server
 npm run server       # 仅代理 server（6 条 REST API）
 npm run cli          # 仅 CLI
 npm run build        # vite build
-npm test             # 831 个测试（node --test + tsx）
+npm test             # 1161 个测试（node --test + tsx）
 npm run type-check / lint / format
 ```
 
@@ -162,11 +171,13 @@ LLM 配置走 `.env`（shared/env.ts 读，shared/llm.ts 用），无 key 时 fa
 - **round 8 正交设计**：`customDilemma.ts` 的 5 种「翻转手法」（怎么翻）与 `schools.ts` 的 5 流派（用什么话翻）正交，可组合 5×5=25 种风格；`quotes.ts` 是金句弹药，`daily.ts` 是日期种子驱动的整合入口。
 - **deep 轮新增叙事轴**：`ledgerCore.dominantTone` 是计算主导语气的唯一共享纯函数（平局按声明顺序确定性决胜，前端 src/ledger.ts 的内联实现应迁移至此）；`ledgerCore.endingNarrative` 在三结局外新增隐藏结局「辩经尊者」（满级 + 主导学术触发，讽刺的极致）；`stats.practiceStage` 是与称号系统正交的另一条叙事轴（5 阶段：初涉红尘/问道之人/行者无疆/洞明世事/超然物外，阈值 0/3/6/10/15，比称号满级 10 笔走得更远，是「后称号时代」的成长）。
 - **env 解析加固**：`env.parseEnvText` 是从 `loadEnv` 抽出的公开纯函数（不碰 process.env、不读文件，SSR 友好且可测），`loadEnv` 复用之消除重复；容错策略：无 `=`/缺 key 的行静默跳过，`KEY=` 得空串（shell 语义），未闭合引号原样保留。
+- **R5 轮新增成就系统**：`achievements.ts` 从 `LedgerEntry[]` 派生 11 枚徽章（累积·多样·连续·主导·里程碑 5 分类），补称号（只看笔数）与结局（只看分布）缺失的「过程性里程碑」；纯派生无需持久化，`evaluateAchievements`/`unlockedAchievements`/`achievementSummary` 三入口。`card.ts` 经可选 `badges` 字段 + `badgesLine` 把徽章集成进分享卡（文本与 HTML，向后兼容：不传不增行），`textCardFromEntries`/`htmlCardFromEntries` 自动派生徽章。R5 顺带把全仓 `tsc --noEmit` 从 26 处 `noUncheckedIndexedAccess` 怪癖清到 0。
 
 ## 下一步（Next Steps）
 
 - [ ] **前端接线**：把 i18n/customDilemma/stats/export/theme/schools/music/quotes/daily 九大模块接入 src/ 的 DOM 层（语言切换、自定义困境编辑器、统计面板、导出按钮、主题切换器、流派选择器、BGM 推荐条、引语弹窗、每日哲思首页卡片）。
 - [ ] **新功能接线**：deep 轮新增的 `dominantTone`（迁移 src/ledger.ts 内联实现）、`endingNarrative`（隐藏结局辩经尊者展示）、`practiceStage`（修行阶段进度条）需接入 src/ 与 cli/。
+- [ ] **成就徽章接线**：R5 新增的 `achievements.ts`（11 枚徽章/5 分类）需接入 src/ 的「修行成就墙」DOM 视图与 cli/ 的 `--achievements` 命令，徽章进度条与已领取状态展示。徽章数据纯派生（无需持久化），但「已读/已弹窗」状态可存 localStorage。
 - [ ] **流派×手法组合**：把 schools 与 customDilemma 的 5 手法做笛卡尔积（25 风格变体），让用户「选流派 + 选手法」定制夸赞风格。
 - [ ] **每日哲思推送**：把 daily.ts 接入 server 的 `/api/daily` 路由 + 前端首页「今日一题」入口，支持 PWA 推送。
 - [ ] **音乐真实对接**：music.ts 当前是数据推荐，可对接网易云/QQ音乐 API 实现真实播放（需 server 代理）。
