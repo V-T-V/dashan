@@ -18,6 +18,7 @@ import type { LedgerEntry } from './ledgerCore.ts';
 import type { Tone } from './types.ts';
 import { TONE_STAMP, TITLES, titleLevel, endingType, type EndingType } from './ledgerCore.ts';
 import { buildTimeline, timelineSummary } from './history.ts';
+import { unlockedAchievements } from './achievements.ts';
 
 /** 卡片输入数据：足够生成一张卡的最小信息。 */
 export interface CardData {
@@ -29,6 +30,11 @@ export interface CardData {
   endingName?: string;
   /** 玩家署名（可选；默认「一善者」）。 */
   playerName?: string;
+  /**
+   * 已达成的修行徽章名（可选；来自 achievements.unlockedAchievements）。
+   * 若提供，会在卡片摘要下方展示一行徽章（emoji + 计数），让分享卡更有「履历感」。
+   */
+  badges?: readonly { emoji: string; name: string }[];
 }
 
 /** 卡片展示的最近事迹条数上限（避免卡片过长）。 */
@@ -115,6 +121,10 @@ export function generateTextCard(
     lines.push(`║${center(endingLabel, width)}║`);
   }
   lines.push(`║${center(summary, width)}║`);
+  const bl = data.badges && data.badges.length > 0 ? badgesLine(data.badges) : '';
+  if (bl) {
+    lines.push(`║${center(bl, width)}║`);
+  }
   lines.push(`╠${'═'.repeat(width)}╣`);
   lines.push(`║${center('· 善 行 录 ·', width)}║`);
   lines.push(`╠${'─'.repeat(width)}╣`);
@@ -154,6 +164,19 @@ function clipText(text: string, max: number): string {
   const chars = [...text];
   if (chars.length <= max) return text;
   return chars.slice(0, Math.max(1, max - 1)).join('') + '…';
+}
+
+/**
+ * 把已达成徽章渲染成一行卡片文案：emoji 串联 + 末尾计数。
+ * 例如：「🏅 善行徽章 ×3」。徽章过多时按调用方传入顺序截断（不在此处截，
+ * 由 center/clipText 在拼装时统一按卡片宽度截）。
+ * @param badges 已达成徽章（每项含 emoji + name）
+ * @returns 单行字符串；空数组返回空串（调用方据此跳过该行）
+ */
+export function badgesLine(badges: readonly { emoji: string; name: string }[]): string {
+  if (badges.length === 0) return '';
+  const emojis = badges.map((b) => b.emoji).join(' ');
+  return `${emojis} ×${badges.length}`;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -198,6 +221,11 @@ export function generateHtmlCard(
         .join('\n')
     : '      <div class="empty">（尚无善行）</div>';
 
+  const badgesHtml =
+    data.badges && data.badges.length > 0
+      ? `    <div class="badges">${escapeHtml(badgesLine(data.badges))}</div>`
+      : '';
+
   const cardBody = `<div class="card">
     <div class="gold-dots">${goldDots}</div>
     <h1 class="couplet">
@@ -212,7 +240,7 @@ export function generateHtmlCard(
       </div>
     </div>
     <div class="summary">${summary}</div>
-    <div class="section-title">· 善 行 录 ·</div>
+${badgesHtml}    <div class="section-title">· 善 行 录 ·</div>
     <div class="deeds">
 ${deedsHtml}
     </div>
@@ -320,6 +348,13 @@ body {
   font-size: 13px;
   letter-spacing: 0.04em;
 }
+.badges {
+  margin-top: 10px;
+  text-align: center;
+  color: ${c.gold};
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
 .section-title {
   margin-top: 24px;
   text-align: center;
@@ -413,7 +448,11 @@ export function textCardFromEntries(
   const tl = buildTimeline(deeds);
   const title = titleNameForCount(deeds.length);
   const endingName = isMaxLevel(deeds.length) ? ENDING_LABEL[tl.ending] : undefined;
-  return generateTextCard({ title, deeds, endingName, playerName: opts.playerName }, { width: opts.width });
+  const badges = unlockedAchievements(deeds).map((a) => ({ emoji: a.emoji, name: a.name }));
+  return generateTextCard(
+    { title, deeds, endingName, playerName: opts.playerName, badges },
+    { width: opts.width },
+  );
 }
 
 /** 一步到位：传 LedgerEntry[]，生成自包含 HTML 卡片。 */
@@ -424,7 +463,11 @@ export function htmlCardFromEntries(
   const tl = buildTimeline(deeds);
   const title = titleNameForCount(deeds.length);
   const endingName = isMaxLevel(deeds.length) ? ENDING_LABEL[tl.ending] : undefined;
-  return generateHtmlCard({ title, deeds, endingName, playerName: opts.playerName }, { full: opts.full });
+  const badges = unlockedAchievements(deeds).map((a) => ({ emoji: a.emoji, name: a.name }));
+  return generateHtmlCard(
+    { title, deeds, endingName, playerName: opts.playerName, badges },
+    { full: opts.full },
+  );
 }
 
 /** 按笔数取称号名（与 ledgerCore.titleLevel 一致）。 */
