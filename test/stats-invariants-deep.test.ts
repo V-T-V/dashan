@@ -59,11 +59,7 @@ test('choiceDistribution: 各 option 计数之和 = total', () => {
 });
 
 test('choiceDistribution: percentages[k] ≈ counts[k]/total（3位小数）', () => {
-  const es = [
-    entry({ deed: '选项A' }),
-    entry({ deed: '选项A' }),
-    entry({ deed: '选项B' }),
-  ];
+  const es = [entry({ deed: '选项A' }), entry({ deed: '选项A' }), entry({ deed: '选项B' })];
   const r = choiceDistribution(es);
   assert.equal(r.percentages.A, 0.667);
   assert.equal(r.percentages.B, 0.333);
@@ -104,11 +100,7 @@ test('inferChoiceId 等价: 全部无法识别 → other 计数=total', () => {
 });
 
 test('inferChoiceId: 仅识别 A-D，E/F 视为 other', () => {
-  const es = [
-    entry({ deed: '选项E' }),
-    entry({ deed: '选 F' }),
-    entry({ deed: '选项A' }),
-  ];
+  const es = [entry({ deed: '选项E' }), entry({ deed: '选 F' }), entry({ deed: '选项A' })];
   const r = choiceDistribution(es);
   assert.equal(r.counts.A, 1);
   assert.equal(r.counts.other, 2);
@@ -117,11 +109,7 @@ test('inferChoiceId: 仅识别 A-D，E/F 视为 other', () => {
 test('inferChoiceId: 正则要求前缀「选」（字面量），无「选」的 deed 归 other', () => {
   // 注意：源码正则 /选项?\s*([A-D])/ 中「选」是字面量，「项?」可选；
   // 即必须以「选」起头才匹配，纯文本「A 是选项」「做了 A」均归 other。
-  const es = [
-    entry({ deed: 'A 是选项' }),
-    entry({ deed: '做了 A' }),
-    entry({ deed: '随便来个B' }),
-  ];
+  const es = [entry({ deed: 'A 是选项' }), entry({ deed: '做了 A' }), entry({ deed: '随便来个B' })];
   const r = choiceDistribution(es);
   assert.equal(r.counts.other, 3);
   assert.equal((r.counts.A ?? 0) + (r.counts.B ?? 0) + (r.counts.C ?? 0) + (r.counts.D ?? 0), 0);
@@ -158,11 +146,7 @@ test('choiceDistribution: 大批量分布稳定', () => {
 // ── tonePreference 不变量 ──────────────────────────────────────
 
 test('tonePreference: dominant = 占比最高的 tone（与 toneStats 一致）', () => {
-  const es = [
-    entry({ tone: '佛系' }),
-    entry({ tone: '佛系' }),
-    entry({ tone: '戏谑' }),
-  ];
+  const es = [entry({ tone: '佛系' }), entry({ tone: '佛系' }), entry({ tone: '戏谑' })];
   const tp = tonePreference(es);
   const ts = toneStats(es);
   assert.equal(tp.dominant, '佛系');
@@ -186,11 +170,7 @@ test('tonePreference: diversity = counts>0 的 tone 数', () => {
 });
 
 test('tonePreference: 全平局 dominant 取循环中首个非零 tone（声明顺序）', () => {
-  const es = [
-    entry({ tone: '温情' }),
-    entry({ tone: '江湖' }),
-    entry({ tone: '学术' }),
-  ];
+  const es = [entry({ tone: '温情' }), entry({ tone: '江湖' }), entry({ tone: '学术' })];
   const tp = tonePreference(es);
   // 三种 tone 各 1 票平局；循环顺序 ['庄严','戏谑','佛系','学术','江湖','温情']
   // 首个 counts>0 的是「学术」（前三个为 0）→ 学术成 dominant

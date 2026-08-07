@@ -260,12 +260,7 @@ test('连续: 非连续（交替）即使总数够也不达成', () => {
 // ---------- 主导型 ----------
 
 test('主导: dominant-3——某语气 3 笔达成', () => {
-  const es = [
-    entry('a', '庄严'),
-    entry('b', '庄严'),
-    entry('c', '庄严'),
-    entry('d', '佛系'),
-  ];
+  const es = [entry('a', '庄严'), entry('b', '庄严'), entry('c', '庄严'), entry('d', '佛系')];
   const a = evaluateAchievements(es).find((x) => x.id === 'dominant-3')!;
   assert.equal(a.unlocked, true);
 });

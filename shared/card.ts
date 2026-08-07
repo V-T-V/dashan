@@ -95,10 +95,7 @@ const ENDING_LABEL: Record<EndingType, string> = {
  * @param data 卡片数据
  * @param opts width=卡片内宽（字符），默认 36
  */
-export function generateTextCard(
-  data: CardData,
-  opts: { width?: number } = {},
-): string {
+export function generateTextCard(data: CardData, opts: { width?: number } = {}): string {
   const width = Math.max(28, opts.width ?? 36);
   const tl = buildTimeline(data.deeds);
   const player = data.playerName?.trim() || '一善者';
@@ -193,10 +190,7 @@ export function badgesLine(badges: readonly { emoji: string; name: string }[]): 
  * @param data 卡片数据
  * @param opts full=true 生成完整 <!DOCTYPE html> 文档；false 仅返回 <div> 片段（便于嵌入）
  */
-export function generateHtmlCard(
-  data: CardData,
-  opts: { full?: boolean } = {},
-): string {
+export function generateHtmlCard(data: CardData, opts: { full?: boolean } = {}): string {
   const full = opts.full ?? true;
   const tl = buildTimeline(data.deeds);
   const player = escapeHtml(data.playerName?.trim() || '一善者');
@@ -421,7 +415,9 @@ function renderGoldDots(count: number): string {
     const top = (rand() * 100).toFixed(2);
     const size = (rand() * 2 + 0.6).toFixed(2);
     const opacity = (rand() * 0.3 + 0.1).toFixed(2);
-    dots.push(`<i style="left:${left}%;top:${top}%;width:${size}px;height:${size}px;opacity:${opacity}"></i>`);
+    dots.push(
+      `<i style="left:${left}%;top:${top}%;width:${size}px;height:${size}px;opacity:${opacity}"></i>`,
+    );
   }
   return dots.join('');
 }

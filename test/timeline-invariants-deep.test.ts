@@ -205,9 +205,7 @@ test('里程碑: 每个阈值 TITLES[i].at（i≥1）首次达到时触发一次
 // ---------- renderTimelineText clip 按码点 ----------
 
 test('render: clip 按码点截断中文（一字一码点，max=5 留 1 位给 … → 4 字+…）', () => {
-  const tl = buildTimeline([
-    entry(1, '一二三四五六七八九十', '庄严'),
-  ]);
+  const tl = buildTimeline([entry(1, '一二三四五六七八九十', '庄严')]);
   const txt = renderTimelineText(tl, { maxLineLength: 5 });
   // deed 行：为  <deed>，截断后应为 4 字 + …
   const deedLine = txt.split('\n').find((l) => l.startsWith('  为'));

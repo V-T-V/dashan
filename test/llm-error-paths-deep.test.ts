@@ -191,7 +191,10 @@ test('norm situation: choices[].id 空串回退字母', () => {
     {
       type: 'situation',
       situation: 's',
-      choices: [{ id: '', text: '甲' }, { id: '', text: '乙' }],
+      choices: [
+        { id: '', text: '甲' },
+        { id: '', text: '乙' },
+      ],
     },
     '',
   ) as { choices: { id: string }[] };
@@ -203,7 +206,14 @@ test('norm situation: choices[].text 空串抛错', () => {
   assert.throws(
     () =>
       normalizeResponse(
-        { type: 'situation', situation: 's', choices: [{ id: 'A', text: '' }, { id: 'B', text: 'x' }] },
+        {
+          type: 'situation',
+          situation: 's',
+          choices: [
+            { id: 'A', text: '' },
+            { id: 'B', text: 'x' },
+          ],
+        },
         '',
       ),
     /choices\[0\]\.text 为空/,
@@ -216,7 +226,10 @@ test('norm situation: choices[].text 纯空白不抛错（实现仅判 falsy，�
     {
       type: 'situation',
       situation: 's',
-      choices: [{ id: 'A', text: '   ' }, { id: 'B', text: 'x' }],
+      choices: [
+        { id: 'A', text: '   ' },
+        { id: 'B', text: 'x' },
+      ],
     },
     '',
   ) as { choices: { text: string }[] };
@@ -227,7 +240,14 @@ test('norm situation: choices[].text 非字符串抛错', () => {
   assert.throws(
     () =>
       normalizeResponse(
-        { type: 'situation', situation: 's', choices: [{ id: 'A', text: 99 }, { id: 'B', text: 'x' }] },
+        {
+          type: 'situation',
+          situation: 's',
+          choices: [
+            { id: 'A', text: 99 },
+            { id: 'B', text: 'x' },
+          ],
+        },
         '',
       ),
     /choices\[0\]\.text 为空/,
@@ -285,7 +305,10 @@ test('norm situation: 合法结构字段齐全（situation 经 pickString trim�
     {
       type: 'situation',
       situation: '  带空格的情境  ',
-      choices: [{ id: 'A', text: '  甲  ' }, { id: 'B', text: '乙' }],
+      choices: [
+        { id: 'A', text: '  甲  ' },
+        { id: 'B', text: '乙' },
+      ],
     },
     '',
   ) as { situation: string; choices: { text: string }[] };
@@ -306,10 +329,7 @@ test('norm turn: 缺 nextSituation 抛错', () => {
 });
 
 test('norm turn: tone 非法 → 回退「庄严」', () => {
-  const res = normalizeResponse(
-    { ...VALID_TURN, tone: '不存在的语气' },
-    '',
-  ) as { tone: string };
+  const res = normalizeResponse({ ...VALID_TURN, tone: '不存在的语气' }, '') as { tone: string };
   assert.equal(res.tone, '庄严');
 });
 
@@ -336,10 +356,9 @@ test('norm turn: 合法 turn 含 praise + next 结构', () => {
 });
 
 test('norm turn: category 放到 next 上（合法保留）', () => {
-  const res = normalizeResponse(
-    { ...VALID_TURN, category: '司法' },
-    '',
-  ) as { next: { category?: string } };
+  const res = normalizeResponse({ ...VALID_TURN, category: '司法' }, '') as {
+    next: { category?: string };
+  };
   assert.equal(res.next.category, '司法');
 });
 
@@ -377,10 +396,7 @@ test('norm: type 大小写敏感（Situation 大写 → 未知 type）', () => {
 });
 
 test('norm: type 缺省（undefined）→ 未知 type', () => {
-  assert.throws(
-    () => normalizeResponse({ foo: 1 }, ''),
-    /未知 type：undefined/,
-  );
+  assert.throws(() => normalizeResponse({ foo: 1 }, ''), /未知 type：undefined/);
 });
 
 // ---------- LlmHttpError ----------

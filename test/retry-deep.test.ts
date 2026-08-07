@@ -270,10 +270,7 @@ test('retry: backoff 退避时长 ≥ 指数项 base*2^attempt（不含抖动上
       const e = expected[i] ?? 0;
       assert.ok(w >= e, `attempt=${i} 等待 ${w} 应 ≥ 指数项 ${e}`);
       // 抖动上界 = exp + base
-      assert.ok(
-        w < e + 100,
-        `attempt=${i} 等待 ${w} 应 < exp+base=${e + 100}`,
-      );
+      assert.ok(w < e + 100, `attempt=${i} 等待 ${w} 应 < exp+base=${e + 100}`);
     });
   } finally {
     t.restore();
@@ -351,9 +348,12 @@ test('retry: 异步抛出后下次调用是新 Promise（无状态泄漏）', as
     // 第一次 withRetry 失败抛出
     await assert.rejects(
       async () =>
-        withRetry(async () => {
-          throw new Error('a');
-        }, { retries: 0 }),
+        withRetry(
+          async () => {
+            throw new Error('a');
+          },
+          { retries: 0 },
+        ),
       /a/,
     );
     // 第二次独立调用应正常工作
@@ -407,12 +407,9 @@ test('retry: 完整 RetryOptions 类型契约（默认值落地）', async () =>
     const opts: RetryOptions = { retries: 1, baseDelayMs: 10, maxDelayMs: 20 };
     await assert.rejects(
       async () =>
-        withRetry(
-          async () => {
-            throw new Error('x');
-          },
-          opts,
-        ),
+        withRetry(async () => {
+          throw new Error('x');
+        }, opts),
       /x/,
     );
     assert.equal(t.waits.length, 1);

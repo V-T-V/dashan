@@ -55,14 +55,20 @@ test('数据: classics 非空且无空串元素', () => {
   for (const id of ALL_SCHOOLS) {
     const cs = SCHOOLS[id]!.classics;
     assert.ok(cs.length >= 1, `${id} 至少 1 部经典`);
-    assert.ok(cs.every((c) => typeof c === 'string' && c.length > 0), `${id} 经典有空串`);
+    assert.ok(
+      cs.every((c) => typeof c === 'string' && c.length > 0),
+      `${id} 经典有空串`,
+    );
   }
 });
 
 test('数据: affinity 全部为合法 Category 且无重复', () => {
   for (const id of ALL_SCHOOLS) {
     const aff = SCHOOLS[id]!.affinity;
-    assert.ok(aff.every((c) => ALL_CATEGORIES.includes(c)), `${id} 含非法 category`);
+    assert.ok(
+      aff.every((c) => ALL_CATEGORIES.includes(c)),
+      `${id} 含非法 category`,
+    );
     assert.equal(new Set(aff).size, aff.length, `${id} affinity 有重复`);
   }
 });
@@ -98,10 +104,7 @@ test('分类器: 确定性——同 category 多次调用返回同值', () => {
 test('分类器: 返回的流派 affinity 含该 category（推荐合理）', () => {
   for (const c of ALL_CATEGORIES) {
     const rec = recommendSchoolForCategory(c);
-    assert.ok(
-      SCHOOLS[rec]!.affinity.includes(c),
-      `${c} 推荐 ${rec} 但其 affinity 不含该题材`,
-    );
+    assert.ok(SCHOOLS[rec]!.affinity.includes(c), `${c} 推荐 ${rec} 但其 affinity 不含该题材`);
   }
 });
 
