@@ -76,8 +76,8 @@ test('retry: attempt 从 0 起递增，最终成功', async () => {
     assert.deepEqual(seenAttempts, [0, 1, 2]);
     assert.equal(t.waits.length, 2, '重试两次，等待两次');
     // 日志说「第 N 次失败」，N 从 1 起（attempt+1）
-    assert.match(t.warned[0], /第 1 次失败/);
-    assert.match(t.warned[1], /第 2 次失败/);
+    assert.match(t.warned[0] ?? '', /第 1 次失败/);
+    assert.match(t.warned[1] ?? '', /第 2 次失败/);
   } finally {
     t.restore();
   }
@@ -267,14 +267,12 @@ test('retry: backoff 退避时长 ≥ 指数项 base*2^attempt（不含抖动上
     // attempt=0..3 触发 4 次等待，每次 ≥ 100*2^attempt
     const expected = [100, 200, 400, 800];
     t.waits.forEach((w, i) => {
-      assert.ok(
-        w >= expected[i],
-        `attempt=${i} 等待 ${w} 应 ≥ 指数项 ${expected[i]}`,
-      );
+      const e = expected[i] ?? 0;
+      assert.ok(w >= e, `attempt=${i} 等待 ${w} 应 ≥ 指数项 ${e}`);
       // 抖动上界 = exp + base
       assert.ok(
-        w < expected[i] + 100,
-        `attempt=${i} 等待 ${w} 应 < exp+base=${expected[i] + 100}`,
+        w < e + 100,
+        `attempt=${i} 等待 ${w} 应 < exp+base=${e + 100}`,
       );
     });
   } finally {
@@ -322,7 +320,7 @@ test('retry: 日志对非 Error 用 String() 描述', async () => {
         ),
       /42/,
     );
-    assert.ok(t.warned[0].includes('42'), '日志应包含 String(42)');
+    assert.ok((t.warned[0] ?? '').includes('42'), '日志应包含 String(42)');
   } finally {
     t.restore();
   }
@@ -418,7 +416,7 @@ test('retry: 完整 RetryOptions 类型契约（默认值落地）', async () =>
       /x/,
     );
     assert.equal(t.waits.length, 1);
-    assert.ok(t.waits[0] <= 20);
+    assert.ok((t.waits[0] ?? 0) <= 20);
   } finally {
     t.restore();
   }

@@ -29,7 +29,7 @@ import {
   practiceStage,
 } from '../shared/stats.ts';
 import { TITLES, MAX_TITLE_LEVEL, toneStats, endingType } from '../shared/ledgerCore.ts';
-import { ALL_CATEGORIES } from '../shared/types.ts';
+import { ALL_CATEGORIES, type Category, type Difficulty } from '../shared/types.ts';
 import type { LedgerEntry } from '../shared/ledgerCore.ts';
 
 function entry(partial: Partial<LedgerEntry>): LedgerEntry {
@@ -100,7 +100,7 @@ test('inferChoiceId 等价: 全部无法识别 → other 计数=total', () => {
   const es = [entry({ deed: 'XYZ' }), entry({ deed: 'hello' }), entry({ deed: '' })];
   const r = choiceDistribution(es);
   assert.equal(r.counts.other, 3);
-  assert.equal(r.counts.A + r.counts.B + r.counts.C + r.counts.D, 0);
+  assert.equal((r.counts.A ?? 0) + (r.counts.B ?? 0) + (r.counts.C ?? 0) + (r.counts.D ?? 0), 0);
 });
 
 test('inferChoiceId: 仅识别 A-D，E/F 视为 other', () => {
@@ -124,7 +124,7 @@ test('inferChoiceId: 正则要求前缀「选」（字面量），无「选」�
   ];
   const r = choiceDistribution(es);
   assert.equal(r.counts.other, 3);
-  assert.equal(r.counts.A + r.counts.B + r.counts.C + r.counts.D, 0);
+  assert.equal((r.counts.A ?? 0) + (r.counts.B ?? 0) + (r.counts.C ?? 0) + (r.counts.D ?? 0), 0);
 });
 
 test('inferChoiceId: 「选A」「选项B」「选项 C」均识别（选 前缀）', () => {
@@ -221,22 +221,21 @@ test('tonePreference: 6 语气全用 diversity=6', () => {
 // ── categoryDistribution 不变量 ────────────────────────────────
 
 test('categoryDistribution: counts 总和 = 带 category 的 entry 数', () => {
-  const es = [
+  const es: (LedgerEntry & { category?: Category })[] = [
     { ...entry({}), category: '亲情' },
     { ...entry({}), category: '职场' },
     { ...entry({}), category: '亲情' },
     { ...entry({}) }, // 无 category
   ];
   const r = categoryDistribution(es);
-  const sum = Object.values(r.counts).reduce((a, b) => a + b, 0);
+  const sum = Object.values(r.counts).reduce((a, b) => a + (b ?? 0), 0);
   assert.equal(sum, 3);
 });
 
 test('categoryDistribution: 未知 category 不计入且不影响 covered', () => {
-  const es = [
+  const es: (LedgerEntry & { category?: Category })[] = [
     { ...entry({}), category: '亲情' },
-    // @ts-expect-error 故意传入未知 category
-    { ...entry({}), category: '不存在' },
+    { ...entry({}), category: '不存在' as Category },
   ];
   const r = categoryDistribution(es);
   assert.equal(r.counts['亲情'], 1);
@@ -270,7 +269,7 @@ test('categoryDistribution: counts 含 ALL_CATEGORIES 全部 key', () => {
 // ── difficultyDistribution 不变量 ──────────────────────────────
 
 test('difficultyDistribution: counts 和 = total', () => {
-  const es = [
+  const es: (LedgerEntry & { difficulty?: Difficulty })[] = [
     { ...entry({}), difficulty: 1 },
     { ...entry({}), difficulty: 2 },
     { ...entry({}), difficulty: 3 },
@@ -279,15 +278,13 @@ test('difficultyDistribution: counts 和 = total', () => {
   ];
   const r = difficultyDistribution(es);
   assert.equal(r.total, 4);
-  assert.equal(r.counts[1] + r.counts[2] + r.counts[3], r.total);
+  assert.equal((r.counts[1] ?? 0) + (r.counts[2] ?? 0) + (r.counts[3] ?? 0), r.total);
 });
 
 test('difficultyDistribution: 非 1/2/3 的 difficulty 不计', () => {
-  const es = [
-    // @ts-expect-error 故意非法
-    { ...entry({}), difficulty: 4 },
-    // @ts-expect-error 故意非法
-    { ...entry({}), difficulty: 0 },
+  const es: (LedgerEntry & { difficulty?: Difficulty })[] = [
+    { ...entry({}), difficulty: 4 as Difficulty },
+    { ...entry({}), difficulty: 0 as Difficulty },
     { ...entry({}), difficulty: 1 },
   ];
   const r = difficultyDistribution(es);
@@ -511,8 +508,18 @@ test('endingForecast: 空数组全 0 且 type 为 endingType([]) 一致', () => 
 
 test('buildStatsPanel: 子项 totalDeeds 与各分布 total 一致', () => {
   const es = [
-    { ...entry({ deed: '选项A', tone: '庄严' }), category: '亲情', difficulty: 1, ts: 1000 },
-    { ...entry({ deed: '选项B', tone: '戏谑' }), category: '职场', difficulty: 2, ts: 2000 },
+    {
+      ...entry({ deed: '选项A', tone: '庄严' }),
+      category: '亲情' as Category,
+      difficulty: 1 as Difficulty,
+      ts: 1000,
+    },
+    {
+      ...entry({ deed: '选项B', tone: '戏谑' }),
+      category: '职场' as Category,
+      difficulty: 2 as Difficulty,
+      ts: 2000,
+    },
   ];
   const p = buildStatsPanel(es);
   assert.equal(p.totalDeeds, 2);
@@ -524,8 +531,16 @@ test('buildStatsPanel: 子项 totalDeeds 与各分布 total 一致', () => {
 
 test('buildStatsPanel: summary 含称号名 + 主导语气 + 结局类型', () => {
   const es = [
-    { ...entry({ deed: '选项A', tone: '佛系' }), category: '亲情', difficulty: 1 },
-    { ...entry({ deed: '选项B', tone: '佛系' }), category: '职场', difficulty: 2 },
+    {
+      ...entry({ deed: '选项A', tone: '佛系' }),
+      category: '亲情' as Category,
+      difficulty: 1 as Difficulty,
+    },
+    {
+      ...entry({ deed: '选项B', tone: '佛系' }),
+      category: '职场' as Category,
+      difficulty: 2 as Difficulty,
+    },
   ];
   const p = buildStatsPanel(es);
   assert.match(p.summary, /已行 2 桩事/);
@@ -543,7 +558,12 @@ test('buildStatsPanel: 空 entries summary = 「尚无修行记录。」', () =>
 
 test('buildStatsPanel: 纯函数——同输入两次调用 deep equal', () => {
   const es = [
-    { ...entry({ deed: '选项A', tone: '庄严' }), category: '亲情', difficulty: 1, ts: 1 },
+    {
+      ...entry({ deed: '选项A', tone: '庄严' }),
+      category: '亲情' as Category,
+      difficulty: 1 as Difficulty,
+      ts: 1,
+    },
   ];
   const a = buildStatsPanel(es);
   const b = buildStatsPanel(es);
