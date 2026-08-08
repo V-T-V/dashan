@@ -29,7 +29,14 @@ import {
   type ExportFormat,
 } from '../shared/export.ts';
 import type { Tone } from '../shared/types.ts';
-import { TITLES, TONE_STAMP, titleLevel, endingType, toneStats, progressToNextTitle } from '../shared/ledgerCore.ts';
+import {
+  TITLES,
+  TONE_STAMP,
+  titleLevel,
+  endingType,
+  toneStats,
+  progressToNextTitle,
+} from '../shared/ledgerCore.ts';
 
 const TONES: Tone[] = ['庄严', '戏谑', '佛系', '学术', '江湖', '温情'];
 
@@ -414,7 +421,10 @@ test('export-deep: exportLedger json 等价 exportLedgerJSON', () => {
 });
 
 test('export-deep: exportLedger markdown 等价 exportLedgerMarkdown', () => {
-  assert.equal(exportLedger('markdown', SAMPLE3, FIXED_META), exportLedgerMarkdown(SAMPLE3, FIXED_META));
+  assert.equal(
+    exportLedger('markdown', SAMPLE3, FIXED_META),
+    exportLedgerMarkdown(SAMPLE3, FIXED_META),
+  );
 });
 
 test('export-deep: exportLedger html 等价 exportLedgerHTML', () => {

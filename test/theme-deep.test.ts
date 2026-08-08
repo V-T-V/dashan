@@ -315,10 +315,13 @@ function injectMemoryStorage(): [Map<string, string>, () => void] {
     setItem: (k: string, v: string) => void store.set(k, v),
     removeItem: (k: string) => void store.delete(k),
   };
-  return [store, () => {
-    if (orig === undefined) delete (globalThis as { localStorage?: unknown }).localStorage;
-    else (globalThis as { localStorage?: unknown }).localStorage = orig;
-  }];
+  return [
+    store,
+    () => {
+      if (orig === undefined) delete (globalThis as { localStorage?: unknown }).localStorage;
+      else (globalThis as { localStorage?: unknown }).localStorage = orig;
+    },
+  ];
 }
 
 test('theme-deep: loadTheme localStorage.getItem 抛错时回退 DEFAULT（不崩）', () => {

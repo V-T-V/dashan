@@ -326,7 +326,10 @@ test('i18n-deep: SYSTEM_PROMPT_EN 含 JSON 输出结构关键字段 type/situati
 
 test('i18n-deep: SYSTEM_PROMPT_EN 含 5 种翻转手法（中文枚举名出现在括号注解）', () => {
   for (const f of FLIP_ARGUMENTS) {
-    assert.ok(SYSTEM_PROMPT_EN.includes(f.name['zh-CN']), `应含翻转手法中文注解 ${f.name['zh-CN']}`);
+    assert.ok(
+      SYSTEM_PROMPT_EN.includes(f.name['zh-CN']),
+      `应含翻转手法中文注解 ${f.name['zh-CN']}`,
+    );
   }
 });
 

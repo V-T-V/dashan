@@ -142,7 +142,7 @@ test('quotes-deep: scoreQuote difficulty 缺省（q 无 difficulties）命中 +1
 
 test('quotes-deep: scoreQuote difficulty 不命中（q 有 difficulties 但不含）= 不加分', () => {
   const qWithDiff = QUOTES.find((x) => x.difficulties && x.difficulties.length > 0)!;
-  const missDiff = ([1, 2, 3].find((d) => !qWithDiff.difficulties!.includes(d))) as number;
+  const missDiff = [1, 2, 3].find((d) => !qWithDiff.difficulties!.includes(d)) as number;
   const cat = qWithDiff.categories[0]!;
   // 指定不命中的 difficulty：题材 +3，难度不加分
   assert.equal(scoreQuote(qWithDiff, { category: cat, difficulty: missDiff }), 3);

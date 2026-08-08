@@ -169,7 +169,8 @@ test('daily-err: dateSeed 相邻日期差异大（散列性质）', () => {
 test('daily-err: dailyReflection 非法日期抛错且信息含原日期', () => {
   assert.throws(
     () => dailyReflection('not-a-date'),
-    (e: unknown) => e instanceof Error && /not-a-date/.test(e.message) && /非法日期/.test(e.message),
+    (e: unknown) =>
+      e instanceof Error && /not-a-date/.test(e.message) && /非法日期/.test(e.message),
   );
 });
 

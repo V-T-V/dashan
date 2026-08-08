@@ -114,7 +114,9 @@ test('music-deep: scoreTrack 三轴全命中（含 mood 重叠）≥ 3+2+1', () 
 test('music-deep: scoreTrack 仅题材命中 = 3（无 mood 重叠时）', () => {
   const t = findTrack('guqin-guangling')!;
   // 取不命中的语气避免 +2/+0.5
-  const missTone = TONES.find((tn) => !t.tones.includes(tn) && !t.mood.some((m) => m.includes(tn) || tn.includes(m)))!;
+  const missTone = TONES.find(
+    (tn) => !t.tones.includes(tn) && !t.mood.some((m) => m.includes(tn) || tn.includes(m)),
+  )!;
   assert.equal(scoreTrack(t, { category: '战争', tone: missTone }), 3);
 });
 
@@ -128,10 +130,17 @@ test('music-deep: scoreTrack 无难度字段的曲目指定难度仍 +1', () => 
 
 test('music-deep: scoreTrack 难度不命中（曲目有 difficulties 但不含）不加分', () => {
   const tWithDiff = MUSIC_LIBRARY.find((x) => x.difficulties && x.difficulties.length > 0)!;
-  const missDiff = ([1, 2, 3].find((d) => !tWithDiff.difficulties!.includes(d as never))) as 1 | 2 | 3;
+  const missDiff = [1, 2, 3].find((d) => !tWithDiff.difficulties!.includes(d as never)) as
+    | 1
+    | 2
+    | 3;
   const cat = tWithDiff.categories[0]!;
   // 题材+3，难度不命中不加
-  const missTone = TONES.find((tn) => !tWithDiff.tones.includes(tn) && !tWithDiff.mood.some((m) => m.includes(tn) || tn.includes(m)))!;
+  const missTone = TONES.find(
+    (tn) =>
+      !tWithDiff.tones.includes(tn) &&
+      !tWithDiff.mood.some((m) => m.includes(tn) || tn.includes(m)),
+  )!;
   assert.equal(scoreTrack(tWithDiff, { category: cat, tone: missTone, difficulty: missDiff }), 3);
 });
 
@@ -148,7 +157,10 @@ test('music-deep: scoreTrack mood 关键词重叠 +0.5（tone 是 mood 子串）
 
 test('music-deep: scoreTrack 确定性（同参同分）', () => {
   const t = MUSIC_LIBRARY[0]!;
-  assert.equal(scoreTrack(t, { category: t.categories[0] }), scoreTrack(t, { category: t.categories[0] }));
+  assert.equal(
+    scoreTrack(t, { category: t.categories[0] }),
+    scoreTrack(t, { category: t.categories[0] }),
+  );
 });
 
 test('music-deep: scoreTrack 纯函数不修改 track', () => {

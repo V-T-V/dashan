@@ -35,7 +35,13 @@ import {
 import type { Tone } from '../shared/types.ts';
 
 const VALID_TONES: Tone[] = ['庄严', '戏谑', '佛系', '学术', '江湖', '温情'];
-const FLIP_IDS = ['causal', 'anti-hypocrisy', 'transcendence', 'conservation', 'creative-destruction'] as const;
+const FLIP_IDS = [
+  'causal',
+  'anti-hypocrisy',
+  'transcendence',
+  'conservation',
+  'creative-destruction',
+] as const;
 
 function validInput(choices: string[] = ['选项 A', '选项 B']): CustomDilemmaInput {
   return { situation: '某情境', choices };
@@ -377,7 +383,10 @@ test('custom-deep: meta 每项含 choiceIndex/flipId/tone 三字段', () => {
 
 test('custom-deep: meta 的 choiceIndex 从 0 递增', () => {
   const r = createCustomDilemma(validInput(['a', 'b', 'c']));
-  assert.deepEqual(r.meta!.map((m) => m.choiceIndex), [0, 1, 2]);
+  assert.deepEqual(
+    r.meta!.map((m) => m.choiceIndex),
+    [0, 1, 2],
+  );
 });
 
 test('custom-deep: 确定性——同输入两次结果 deep equal（含 script 与 meta）', () => {
