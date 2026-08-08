@@ -229,16 +229,21 @@ export function dominantTone(entries: readonly LedgerEntry[]): Tone | null {
  *  - 灭世：杀伐果断，以非常之恶行非常之善
  *  - 超脱：超越善恶二元，俯瞰人间
  *
- * 隐藏结局（彩蛋）：当玩家达到最高称号（isMaxTitle）且主导语气为「学术」时，
- * 触发「辩经尊者」——以纯然理性超脱一切道德判断，是讽刺的极致。
+ * 隐藏结局（彩蛋）：当玩家达到最高称号（isMaxTitle）且主导语气为特定值时触发——
+ *  - 主导「学术」→「辩经尊者」：以纯然理性超脱一切道德判断，是讽刺的极致。
+ *  - 主导「江湖」→「执剑尊者」：一路以侠客/亡命之徒的姿态行「恶」，
+ *    最终自己成了需要被超度的那个「系统」本身——讽刺的另一种极致。
+ *
+ * 学术与江湖是隐藏结局的两面：前者用「脑」解构善恶，后者用「刀」贯彻善恶，
+ * 走到尽头都落进同一个讽喻——你以为你在玩游戏，其实你成了游戏本身。
  *
  * @param entries 善恶簿记录
  * @param count   当前记录数（可与 entries.length 不同，便于从存档恢复时传入）
  * @returns 含 type/title/tone/narrative 四字段的结局描述对象
  */
 export interface EndingNarrative {
-  /** 结局类型（含隐藏结局「辩经尊者」）。 */
-  type: EndingType | '辩经尊者';
+  /** 结局类型（含隐藏结局「辩经尊者」/「执剑尊者」）。 */
+  type: EndingType | '辩经尊者' | '执剑尊者';
   /** 当前善名称号。 */
   title: string;
   /** 主导语气（无记录时为 null）。 */
@@ -255,15 +260,20 @@ export function endingNarrative(
   const tone = dominantTone(entries);
   const baseType = endingType(entries);
 
-  // 隐藏结局：满级 + 主导学术 → 辩经尊者
-  const isHidden = isMaxTitle(count) && tone === '学术';
-  const type: EndingNarrative['type'] = isHidden ? '辩经尊者' : baseType;
+  // 隐藏结局：满级 + 主导学术 → 辩经尊者；满级 + 主导江湖 → 执剑尊者
+  let hiddenType: EndingNarrative['type'] | null = null;
+  if (isMaxTitle(count)) {
+    if (tone === '学术') hiddenType = '辩经尊者';
+    else if (tone === '江湖') hiddenType = '执剑尊者';
+  }
+  const type: EndingNarrative['type'] = hiddenType ?? baseType;
 
   const epilogues: Record<EndingNarrative['type'], string> = {
     渡世: '你以慈悲为秤，称量众生之苦为己苦。世人或讥你伪善，殊不知这伪善若是装了一生，便与真善无异。大善者，渡人亦渡己。',
     灭世: '你以杀伐为笔，书写非常之恶以成非常之善。凡夫见你手染鲜血，不见你背负的因果。能造大恶者，方有大善之能；这便是大善系统的终极讽喻。',
     超脱: '你超越了善恶的二元樊笼，俯瞰人间纷扰。不渡不灭，不立不破——这不是冷漠，而是看穿了所有的「善」都不过是另一种「恶」的注脚。',
     辩经尊者: '你以纯然的理性，将一切道德判断解构为语法游戏。善与恶在你口中不过是可任意翻转的命题——这是大善系统的究极形态：连「大善」本身，都被你论证成了多余的执念。',
+    执剑尊者: '你一路以侠客之姿拔刀，每一桩「恶」都斩得痛快淋漓。可当你终于站到山巅回望——被你超度的众生早已换了面孔，唯一没换的是你手中那把停不下来的刀。你以为自己是替天行道的侠，其实你已成了下一个需要被超度的「天」。大恶即大善，大侠即大魔——这便是江湖的终极闭环。',
   };
 
   const lines = [
