@@ -37,7 +37,7 @@ export interface ExportMeta {
 export type ExportEntry = LedgerEntry & { category?: Category; difficulty?: Difficulty; ts?: unknown };
 
 /** 结局类型的中文名（与 ledgerCore 一致，本地化展示）。 */
-const ENDING_NAME: Record<EndingType, string> = {
+export const ENDING_NAME: Record<EndingType, string> = {
   渡世: '渡世（慈悲为怀）',
   灭世: '灭世（杀伐果断）',
   超脱: '超脱（超越善恶）',
