@@ -386,3 +386,72 @@ export function practiceStage(deedCount: number): PracticeStageResult {
   const percent = Math.max(0, Math.min(100, span > 0 ? Math.round((done / span) * 100) : 100));
   return { stage, next, remaining, percent };
 }
+
+// ── 隐藏结局进度提示（hiddenEndingHint）─────────────────────
+// 与 ledgerCore.endingNarrative 的两个隐藏结局对齐：
+//   满级 + 主导学术 → 「辩经尊者」
+//   满级 + 主导江湖 → 「执剑尊者」（R10 新增）
+// 本函数在玩家「尚未满级、但已在某隐藏结局的路径上」时给出进度提示，
+// 让前端能展示「你正走向辩经尊者/执剑尊者」的预告，增加叙事牵引力。
+//
+// 触发条件（全部满足才给出 hint）：
+//   1. 主导语气为「学术」或「江湖」（隐藏结局的两条路径）
+//   2. 主导语气占比 ≥ 阈值（默认 50%，确保玩家「风格已成型」）
+//   3. 尚未满级（满级则直接由 endingNarrative 给出结局，无需 hint）
+//   4. 至少有 1 笔记录（空记录无主导语气，无 hint）
+
+/** 隐藏结局路径的两种走向（与 ledgerCore 对齐）。 */
+export type HiddenEndingPath = '辩经尊者' | '执剑尊者';
+
+/** hiddenEndingHint 的返回结构。 */
+export interface HiddenEndingHint {
+  /** 是否在隐藏结局路径上。 */
+  onPath: boolean;
+  /** 走向的隐藏结局（onPath=true 时有值）。 */
+  path: HiddenEndingPath | null;
+  /** 距满级（触发隐藏结局）还差几笔。 */
+  deedsToUnlock: number;
+  /** 主导语气当前占比 0-1（onPath=true 时 ≥ 阈值）。 */
+  dominantRatio: number;
+  /** 主导语气。 */
+  dominant: Tone | null;
+  /** 是否已解锁（满级，此时 endingNarrative 会直接给出隐藏结局）。 */
+  unlocked: boolean;
+}
+
+/** 主导语气计入隐藏路径的最低占比阈值（默认 0.5）。 */
+const DEFAULT_HIDDEN_RATIO_THRESHOLD = 0.5;
+
+/**
+ * 探测玩家是否在隐藏结局路径上。
+ * @param entries 善恶簿记录
+ * @param count   当前 deed 数（可与 entries.length 不同，便于存档恢复）
+ * @param ratioThreshold 主导语气占比阈值（默认 0.5）
+ */
+export function hiddenEndingHint(
+  entries: readonly LedgerEntry[],
+  count: number = entries.length,
+  ratioThreshold: number = DEFAULT_HIDDEN_RATIO_THRESHOLD,
+): HiddenEndingHint {
+  const total = entries.length;
+  const dominant = tonePreference(entries).dominant;
+  const maxAt = TITLES[MAX_TITLE_LEVEL]!.at;
+  const deedsToUnlock = Math.max(0, maxAt - count);
+  const unlocked = count >= maxAt;
+  const dominantRatio = total > 0 && dominant !== null ? toneStats(entries)[dominant]! / total : 0;
+
+  // 隐藏路径仅学术/江湖两种
+  const pathTone = dominant === '学术' || dominant === '江湖' ? dominant : null;
+  const onPath =
+    pathTone !== null &&
+    dominantRatio >= ratioThreshold &&
+    total > 0;
+
+  const path: HiddenEndingPath | null = onPath
+    ? pathTone === '学术'
+      ? '辩经尊者'
+      : '执剑尊者'
+    : null;
+
+  return { onPath, path, deedsToUnlock, dominantRatio, dominant, unlocked };
+}
