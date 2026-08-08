@@ -41,7 +41,7 @@ import {
   choicePromptEn,
   type Locale,
 } from '../shared/i18n.ts';
-import type { Category, Difficulty, Tone } from '../shared/types.ts';
+import type { Difficulty, Tone } from '../shared/types.ts';
 import { ALL_CATEGORIES } from '../shared/types.ts';
 import { TITLES } from '../shared/ledgerCore.ts';
 
@@ -333,10 +333,11 @@ test('i18n-deep: SYSTEM_PROMPT_EN 含 5 种翻转手法（中文枚举名出现�
   }
 });
 
-test('i18n-deep: firstUserPromptEn 非空且为英文', () => {
+test('i18n-deep: firstUserPromptEn 非空且为英文（纯 ASCII）', () => {
   const s = firstUserPromptEn();
   assert.ok(s.length > 0);
-  assert.ok(/^[\x00-\x7f]+$/.test(s), '纯 ASCII');
+  const allAscii = [...s].every((ch) => ch.codePointAt(0)! < 128);
+  assert.ok(allAscii, '应纯 ASCII');
 });
 
 test('i18n-deep: choicePromptEn 含传入的 choiceText', () => {

@@ -463,7 +463,6 @@ test('custom-deep: flipDiversity 空 meta 返回 0', () => {
 });
 
 test('custom-deep: flipDiversity 单选项返回 1', () => {
-  const r = createCustomDilemma(validInput(['solo']));
   // 注意 1 个选项会被拒，构造合法 2 选项取其一的 meta 模拟
   const r2 = createCustomDilemma(validInput(['a', 'b']));
   const singleMeta = [r2.meta![0]!];

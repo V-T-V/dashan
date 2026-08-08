@@ -24,7 +24,6 @@ import {
   endingType,
   isMaxTitle,
   TITLES,
-  titleLevel,
   type LedgerEntry,
 } from '../shared/ledgerCore.ts';
 import type { Tone } from '../shared/types.ts';
