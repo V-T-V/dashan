@@ -39,7 +39,7 @@ export const LOCALE_LABEL: Record<Locale, string> = {
  */
 type Dict = Record<string, string>;
 
-const STRINGS: Record<Locale, Dict> = {
+export const STRINGS: Record<Locale, Dict> = {
   'zh-CN': {
     'app.title': '大善系统',
     'app.tagline': '善恶由我定，你是大好人',
@@ -93,7 +93,7 @@ export function t(key: string, locale: Locale = DEFAULT_LOCALE): string {
 
 // ── 语气 / 题材 / 难度的展示名映射 ──────────────────────
 
-const TONE_LABELS: Record<Locale, Record<Tone, string>> = {
+export const TONE_LABELS: Record<Locale, Record<Tone, string>> = {
   'zh-CN': { 庄严: '庄严', 戏谑: '戏谑', 佛系: '佛系', 学术: '学术', 江湖: '江湖', 温情: '温情' },
   'en-US': {
     庄严: 'Solemn',
@@ -110,7 +110,7 @@ export function toneLabel(tone: Tone, locale: Locale = DEFAULT_LOCALE): string {
   return TONE_LABELS[locale][tone] ?? tone;
 }
 
-const CATEGORY_LABELS: Record<Locale, Record<Category, string>> = {
+export const CATEGORY_LABELS: Record<Locale, Record<Category, string>> = {
   'zh-CN': { 职场: '职场', 医疗: '医疗', 司法: '司法', 战争: '战争', 亲情: '亲情', 金钱: '金钱', 科技: '科技', 人性: '人性' },
   'en-US': {
     职场: 'Workplace',
@@ -129,7 +129,7 @@ export function categoryLabel(cat: Category, locale: Locale = DEFAULT_LOCALE): s
   return CATEGORY_LABELS[locale][cat] ?? cat;
 }
 
-const DIFFICULTY_LABELS: Record<Locale, Record<Difficulty, string>> = {
+export const DIFFICULTY_LABELS: Record<Locale, Record<Difficulty, string>> = {
   'zh-CN': { 1: '初阶', 2: '进阶', 3: '深渊' },
   'en-US': { 1: 'Novice', 2: 'Adept', 3: 'Abyssal' },
 };
