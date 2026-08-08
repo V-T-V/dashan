@@ -80,3 +80,23 @@ export function loadEnv(cwd: string = process.cwd()): void {
 export function env(key: string, fallback = ''): string {
   return process.env[key] ?? fallback;
 }
+
+/**
+ * 读取一个数值型环境变量。
+ *
+ * 与 `Number(env(key, String(fallback))) || fallback` 的关键差异：
+ *  - 那种写法会把合法的 `0` 当假值吞掉（如 `KINDNESS_LLM_RETRIES=0` 被当成 3、
+ *    `KINDNESS_LLM_TIMEOUT_MS=0` 被当成 30000）。本函数显式区分「未设置/空/NaN」
+ *    与「合法的 0」：仅在变量缺失、空串或解析为 NaN 时回退；显式的 `0` 被保留。
+ *  - 仍受 fallback 钳制：fallback 必须是有限数（否则也按 NaN 处理返回它本身）。
+ *
+ * @param key 环境变量名
+ * @param fallback 解析失败/未设置时的默认值
+ * @returns 解析出的数值（0 也算合法）；解析失败返回 fallback
+ */
+export function envNumber(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+}
